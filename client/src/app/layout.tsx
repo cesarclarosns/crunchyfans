@@ -1,0 +1,35 @@
+import '@/styles/globals.css';
+
+import { GeistMono } from 'geist/font/mono';
+import { GeistSans } from 'geist/font/sans';
+
+import { AppLayout } from '@/components/app-layout';
+import { Providers } from '@/components/providers';
+import { Toaster } from '@/components/ui/toaster';
+
+export const metadata = {
+  description: 'CrunchyFans',
+  icons: [{ rel: 'icon', url: '/favicon.ico' }],
+  title: 'CrunchyFans',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html
+      lang="en"
+      suppressHydrationWarning={true}
+      className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}
+    >
+      <body suppressHydrationWarning={true}>
+        <Providers>
+          <AppLayout>{children}</AppLayout>
+        </Providers>
+        <Toaster />
+      </body>
+    </html>
+  );
+}

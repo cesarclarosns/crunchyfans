@@ -1,0 +1,19 @@
+em-emoji-picker {
+    --background-rgb: var(--background);
+    /* --border-radius: 24px; */
+    --category-icon-size: 1.5rem;
+    --color-border-over: rgba(0, 0, 0, 0.1);
+    --color-border: rgba(0, 0, 0, 0.05);
+    --font-family: var(--font-family);
+    --font-size: 1rem;
+    --rgb-accent: var(--background);
+    --rgb-background: var(--background);
+    --rgb-color: var(--background);
+    --rgb-input: var(--background);
+    --shadow: 5px 5px 15px -8px var(--background);
+    --preview-placeholder-size: 1rem;
+    --preview-title-size: 1rem;
+    --preview-subtitle-size: 1rem;
+    min-height: 400px;
+    max-height: 800px;
+}
