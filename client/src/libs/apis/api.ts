@@ -2,7 +2,7 @@ import axios, { AxiosError, HttpStatusCode } from 'axios';
 import axiosRetry from 'axios-retry';
 
 import { env } from '@/env';
-import { refresh } from '@/hooks/auth';
+import { refresh } from '@/hooks/auth/refresh';
 import { useAuthStore } from '@/stores/auth-store';
 
 const api = axios.create({
@@ -11,19 +11,17 @@ const api = axios.create({
 
 axiosRetry(api, {
   retries: Infinity,
-  retryDelay: (retryCount, error) => {
-    if (
-      [
-        HttpStatusCode.TooManyRequests,
-        HttpStatusCode.InternalServerError,
-      ].includes(error.response?.status!)
-    ) {
-      const delay = axiosRetry.exponentialDelay(retryCount);
-      if (delay > 30_000) return 30_000;
-      return delay;
-    } else {
-      return 1_000;
-    }
+  retryCondition: (error) => {
+    return (
+      error instanceof AxiosError &&
+      (axiosRetry.isRetryableError(error) ||
+        [HttpStatusCode.TooManyRequests].includes(error.response?.status!))
+    );
+  },
+  retryDelay: (retryCount) => {
+    const delay = axiosRetry.exponentialDelay(retryCount);
+    if (delay > 30_000) return 30_000;
+    return delay;
   },
 });
 

@@ -9,18 +9,16 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import aqp from 'api-query-params';
 import { Request } from 'express';
-import mongoose from 'mongoose';
 
 import { ChatsService } from './chats.service';
 import { CreateChatDto } from './dto/create-chat.dto';
-import { CreateChatMassiveMessageDto } from './dto/create-chat-massive-message.dto';
-import { CreateChatMessageDto } from './dto/create-chat-message.dto';
-import { FindAllChatMessagesDto } from './dto/find-all-chat-messages.dto';
+import { CreateMassiveMessageDto } from './dto/create-massive-message.dto';
+import { CreateMessageDto } from './dto/create-message.dto';
 import { FindAllChatsDto } from './dto/find-all-chats.dto';
+import { FindAllMessagesDto } from './dto/find-all-messages.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { UpdateChatMessageDto } from './dto/update-chat-message.dto';
+import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Controller('chats')
 export class ChatsController {
@@ -28,7 +26,6 @@ export class ChatsController {
 
   @Post()
   async create(@Body() createChatDto: CreateChatDto) {
-    console.log('create', { createChatDto });
     return await this.chatsService.create(createChatDto);
   }
 
@@ -42,6 +39,13 @@ export class ChatsController {
     findAllChatsDto.userId = userId;
 
     return await this.chatsService.findAll(findAllChatsDto);
+  }
+
+  @Get('unread')
+  async getUnreadChats(@Req() req: Request) {
+    const userId = req.user.sub;
+
+    return await this.chatsService.getUnreadChats(userId);
   }
 
   @Get(':chatId')
@@ -66,24 +70,24 @@ export class ChatsController {
   async createMessage(
     @Req() req: Request,
     @Param('chatId') chatId: string,
-    @Body() createChatMessageDto: CreateChatMessageDto,
+    @Body() createMessageDto: CreateMessageDto,
   ) {
     const userId = req.user.sub;
 
-    createChatMessageDto.userId = userId;
-    createChatMessageDto.chatId = chatId;
+    createMessageDto.userId = userId;
+    createMessageDto.chatId = chatId;
 
-    return await this.chatsService.createMessage(createChatMessageDto);
+    return await this.chatsService.createMessage(createMessageDto);
   }
 
   @Get(':chatId/messages')
   async findAllMessages(
     @Param('chatId') chatId: string,
-    @Query() findAllChatMessagesDto: FindAllChatMessagesDto,
+    @Query() findAllMessagesDto: FindAllMessagesDto,
   ) {
-    findAllChatMessagesDto.chatId = chatId;
+    findAllMessagesDto.chatId = chatId;
 
-    return await this.chatsService.findAllMessages(findAllChatMessagesDto);
+    return await this.chatsService.findAllMessages(findAllMessagesDto);
   }
 
   @Get(':chatId/messages/:messageId')
@@ -95,13 +99,13 @@ export class ChatsController {
   async updateMessage(
     @Req() req: Request,
     @Param('messageId') messageId: string,
-    @Body() updateChatMessageDto: UpdateChatMessageDto,
+    @Body() updateMessageDto: UpdateMessageDto,
   ) {
     const userId = req.user.sub;
 
     return await this.chatsService.updateMessage(
       { _id: messageId, userId },
-      updateChatMessageDto,
+      updateMessageDto,
     );
   }
 
@@ -115,10 +119,21 @@ export class ChatsController {
     return await this.chatsService.deleteMessage({ _id: messageId, userId });
   }
 
+  @Post(':chatId/messages/:messageId/read')
+  async readMessage(
+    @Req() req: Request,
+    @Param('chatId') chatId: string,
+    @Param('messageId') messageId: string,
+  ) {
+    const userId = req.user.sub;
+
+    return await this.chatsService.readMessage({ chatId, messageId, userId });
+  }
+
   @Post(':chatId/massive-message')
   async createMassiveMessage(
     @Req() req: Request,
-    @Body() createMassiveMessageDto: CreateChatMassiveMessageDto,
+    @Body() createMassiveMessageDto: CreateMassiveMessageDto,
   ) {
     const userId = req.user.sub;
 

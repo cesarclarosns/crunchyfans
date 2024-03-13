@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { endOfDay, format, isEqual } from 'date-fns';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -9,40 +8,51 @@ import {
 } from '@/common/interfaces/socket';
 import { Icons } from '@/components/ui/icons';
 import {
-  type InfiniteDataChatMessages,
-  useGetChatMessagesQuery,
-} from '@/hooks/chats/use-get-chat-messages-query';
+  useGetMessagesQuery,
+  type UseGetMessagesQueryParams,
+} from '@/hooks/chats/use-get-messages-query';
+import { useReadMessageMutation } from '@/hooks/chats/use-read-message';
+import { useGetCurrentUserQuery } from '@/hooks/users/use-get-current-user-query';
 import { socket } from '@/libs/socket';
-import { type ChatMessage } from '@/models/chats/chat-message';
+import { type Message } from '@/schemas/chats/message';
 
 import { ChatMessagesListItem } from './chat-messages-list-item';
 import { useChatContext } from './chat-provider';
 
 interface MessagesPerDate {
   date: Date;
-  messages: ChatMessage[];
+  messages: Message[];
 }
 
 export function ChatMessagesList() {
-  const { chat } = useChatContext();
+  const {
+    state: { chat, messages },
+    dispatch,
+  } = useChatContext();
 
-  const [params, setParams] = useState<{
-    chatId: string | null;
-    order: 'recent' | 'old';
-  }>({ chatId: chat._id, order: 'recent' });
+  const { data: currentUser } = useGetCurrentUserQuery();
+
+  const [params, setParams] = useState<UseGetMessagesQueryParams>({
+    chatId: chat._id,
+  });
 
   useEffect(() => {
     setParams({ ...params, chatId: chat._id });
   }, [chat]);
 
-  const queryClient = useQueryClient();
+  const readMessageMutation = useReadMessageMutation();
 
   const [typing, setTyping] = useState(false);
 
   const { data, fetchNextPage, isFetchingNextPage, hasNextPage, isLoading } =
-    useGetChatMessagesQuery(params);
+    useGetMessagesQuery(params);
 
-  const messages = useMemo(() => (data?.pages ?? []).flat().reverse(), [data]);
+  useEffect(() => {
+    dispatch({
+      payload: (data?.pages ?? []).flat().reverse(),
+      type: 'SetMessages',
+    });
+  }, [data]);
 
   const messagesPerDate = useMemo(() => {
     return messages.reduce((acc, curr) => {
@@ -84,20 +94,7 @@ export function ChatMessagesList() {
     const handleNewMessage = (
       ev: EventPayload<ServerToClientEvents['chats/new-message']>,
     ) => {
-      if (ev.chatId !== chat._id) return;
-
-      queryClient.setQueryData(
-        [`chats/${chat._id}/messages`, params],
-        (data: InfiniteDataChatMessages) => {
-          return {
-            pageParams: [...data.pageParams],
-            pages: [
-              [ev.message, ...(data.pages.at(0) ?? [])],
-              ...data.pages.slice(1),
-            ],
-          };
-        },
-      );
+      if (ev.chat._id !== chat._id) return;
 
       setTimeout(
         () =>
@@ -111,7 +108,7 @@ export function ChatMessagesList() {
     const handleUserTyping = (
       ev: EventPayload<ServerToClientEvents['chats/user-typing']>,
     ) => {
-      if (ev.chatId === chat._id) {
+      if (ev.chatId === chat._id && ev.userId !== currentUser?._id) {
         setTyping(true);
 
         if (userTypingTimeoutRef.current) {
@@ -137,9 +134,36 @@ export function ChatMessagesList() {
     };
   }, [params]);
 
+  // Read last message
+  useEffect(() => {
+    const lastMessage = messages.at(-1);
+
+    if (!lastMessage || isLoading || !currentUser) return;
+    if (lastMessage.seenBy.includes(currentUser._id)) return;
+
+    readMessageMutation.mutate({
+      chatId: lastMessage.chatId,
+      messageId: lastMessage._id,
+    });
+  }, [messages, isLoading]);
+
+  // Scroll to last message in the first load
+  useEffect(() => {
+    if (!isLoading) {
+      setTimeout(
+        () =>
+          containerRef.current?.scrollTo({
+            behavior: 'smooth',
+            top: containerRef.current?.scrollHeight,
+          }),
+        1_000,
+      );
+    }
+  }, [isLoading]);
+
   return (
     <div
-      className="flex flex-1 flex-col overflow-y-scroll rounded-md border-[1px] px-2 py-4 text-sm"
+      className="flex flex-1 flex-col overflow-y-scroll border-b-2 px-2 py-4 text-sm"
       style={{ scrollbarWidth: 'none' }}
       ref={containerRef}
     >

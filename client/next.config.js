@@ -6,6 +6,11 @@ await import('./src/env.js');
 
 /** @type {import("next").NextConfig} */
 const config = {
+  images: {
+    remotePatterns: [
+      { hostname: 'd33kwh1cqhvo9a.cloudfront.net', protocol: 'https' },
+    ],
+  },
   reactStrictMode: false,
 };
 

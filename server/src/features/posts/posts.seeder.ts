@@ -1,7 +1,6 @@
-import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
 import { Media } from '../media/entities/media.entity';
@@ -10,12 +9,6 @@ import { Post } from './entities/post.entity';
 import { PostComment } from './entities/post-comment.entity';
 import { PostCommentLike } from './entities/post-comment-like.entity';
 import { PostLike } from './entities/post-like.entity';
-
-const createRandomObjectId = (days: number) => {
-  return mongoose.Types.ObjectId.createFromTime(
-    faker.date.recent({ days }).getTime() / 1000,
-  );
-};
 
 @Injectable()
 export class PostsSeeder implements Seeder {
@@ -42,17 +35,12 @@ export class PostsSeeder implements Seeder {
           },
         ]);
 
-        await Promise.all(
-          [...Array(10)].map(async () => {
-            const postsRecords = DataFactory.createForClass(Post).generate(1, {
-              _id: createRandomObjectId(30),
-              media: media.map((media) => media._id),
-              userId: user._id,
-            });
+        const postsRecords = DataFactory.createForClass(Post).generate(10, {
+          media: media.map((media) => media._id),
+          userId: user._id,
+        });
 
-            await this.postModel.insertMany(postsRecords);
-          }),
-        );
+        await this.postModel.insertMany(postsRecords);
       }),
     );
 
@@ -68,8 +56,7 @@ export class PostsSeeder implements Seeder {
             // Create post comments and update metadata (commentsCount)
             const postCommentRecords = DataFactory.createForClass(
               PostComment,
-            ).generate(1, {
-              _id: createRandomObjectId(30),
+            ).generate(5, {
               postId: post._id,
               userId: user._id,
             });
@@ -83,20 +70,17 @@ export class PostsSeeder implements Seeder {
               },
               {
                 $inc: {
-                  'metadata.commentsCount': 1,
+                  'metadata.commentsCount': 5,
                 },
               },
             );
 
             // Create replies to comments and update metadata (commentsCount)
             await Promise.all([
-              postComments.map(async (postComment, id) => {
-                if (id > 5) return;
-
+              postComments.map(async (postComment) => {
                 const postCommentRecords = DataFactory.createForClass(
                   PostComment,
-                ).generate(1, {
-                  _id: createRandomObjectId(30),
+                ).generate(3, {
                   postCommentId: postComment._id,
                   postId: postComment.postId,
                   userId: user._id,
@@ -110,7 +94,7 @@ export class PostsSeeder implements Seeder {
                   },
                   {
                     $inc: {
-                      'metadata.commentsCount': 1,
+                      'metadata.commentsCount': 3,
                     },
                   },
                 );

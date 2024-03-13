@@ -3,23 +3,20 @@ import { MediaDto } from '@/features/media/dto/media.dto';
 
 import { USER_STATUS } from '../users.constants';
 
-class Metadata {
-  followersCount: number;
-  followeesCount: number;
+export class MetadataDto {
   subscribersCount: number;
 }
 
-class Pictures {
-  coverPicture?: MediaDto;
+export class PicturesDto {
   profilePicture?: MediaDto;
 }
 
-class Settings {
+export class SettingsDto {
   status: ObjectValues<typeof USER_STATUS>;
 }
 
-class Subscription {
-  price: number;
+export class OAuthDto {
+  googleId?: string;
 }
 
 export class UserDto {
@@ -27,8 +24,11 @@ export class UserDto {
   email: string;
   username: string;
   displayName: string;
+  password: string;
+  bio: string;
+  lastConnection: string;
 
-  pictures?: Pictures;
-  metadata?: Metadata;
-  subscription: Subscription;
+  oauth: OAuthDto;
+  metadata: MetadataDto;
+  settings: SettingsDto;
 }

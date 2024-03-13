@@ -24,16 +24,9 @@ export const IMAGE_FILE_TYPE = {
 } as const;
 
 export const VIDEO_FILE_TYPE = {
-  avi: 'avi',
   m4v: 'm4v',
-  mkv: 'mkv',
-  moov: 'moov',
   mov: 'mov',
   mp4: 'mp4',
-  mpeg: 'mpeg',
-  mpg: 'mpg',
-  webm: 'webm',
-  wmv: 'wmv',
 } as const;
 
 export const FILE_TYPE = {

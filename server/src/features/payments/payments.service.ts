@@ -1,14 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, set } from 'mongoose';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import Stripe from 'stripe';
 
-import { stripe } from '@/libs/stripe';
+import { config } from '@/config';
+import { stripe } from '@/features/payments/stripe';
 
 import { AUTH_EVENTS } from '../auth/events';
 import { UsersService } from '../users/users.service';
+import { BillingDto } from './dto/billing.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePayoutDto } from './dto/create-payout.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
+import { SetupIntentDto } from './dto/setup-intent.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { Billing } from './entities/billing.entity';
 import { Payment } from './entities/payment.entity';
@@ -16,11 +22,155 @@ import { Payment } from './entities/payment.entity';
 @Injectable()
 export class PaymentsService {
   constructor(
+    @InjectPinoLogger(PaymentsService.name) private readonly logger: PinoLogger,
     @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Billing.name) private billingModel: Model<Billing>,
     @InjectModel(Payment.name) private paymentModel: Model<Payment>,
     private readonly usersService: UsersService,
   ) {}
+
+  // Stripe
+
+  async webhook(event: Stripe.Event) {
+    switch (event.type) {
+      case 'customer.subscription.created':
+        break;
+      case 'payment_intent.succeeded':
+        break;
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+
+    return;
+  }
+
+  async createSetupIntent({
+    userId,
+  }: {
+    userId: string;
+  }): Promise<SetupIntentDto> {
+    const billing = await this.findOrCreateBilling({ userId });
+
+    const setupIntent = await stripe.setupIntents.create({
+      customer: billing.stripeCustomerId,
+      payment_method_types: ['card'],
+    });
+
+    return { clientSecret: setupIntent.client_secret! };
+  }
+
+  async listPaymentMethods({ userId }: { userId: string }) {
+    const billing = await this.findOrCreateBilling({ userId });
+
+    const paymentMethos = await stripe.customers.listPaymentMethods(
+      billing.stripeCustomerId,
+      {
+        type: 'card',
+      },
+    );
+
+    return paymentMethos.data.map((paymentMethod) => {
+      return paymentMethod;
+    });
+  }
+
+  async createAccountOnboardingLink({
+    userId,
+  }: {
+    userId: string;
+  }): Promise<{ url: string }> {
+    const billing = await this.findOrCreateBilling({ userId });
+
+    const accountLink = await stripe.accountLinks.create({
+      account: billing.stripeAccountId,
+      collection_options: {
+        fields: 'eventually_due',
+      },
+      refresh_url: `${config.APP.APP_DOMAIN}/my/payments/bank_account`,
+      return_url: `${config.APP.APP_DOMAIN}/my/payments/bank_account`,
+      type: 'account_onboarding',
+    });
+
+    return { url: accountLink.url };
+  }
+
+  async createPayout(createPayoutDto: CreatePayoutDto) {
+    const billing = await this.findOrCreateBilling({
+      userId: createPayoutDto.userId,
+    });
+
+    return await stripe.payouts.create(
+      { amount: createPayoutDto.amount, currency: 'usd' },
+      { stripeAccount: billing.stripeAccountId },
+    );
+  }
+
+  async createSubscription({
+    userId,
+    targetUserId,
+    paymentMethodId,
+    priceUnitAmount,
+  }: {
+    userId: string;
+    targetUserId: string;
+    paymentMethodId: string;
+    priceUnitAmount: number;
+  }) {
+    const [billing, targetBilling] = await Promise.all([
+      this.findOrCreateBilling({ userId }),
+      this.findOrCreateBilling({ userId: targetUserId }),
+    ]);
+
+    const [user, targetUser] = await Promise.all([
+      this.usersService.findOneById(userId),
+      this.usersService.findOneById(targetUserId),
+    ]);
+
+    const product = `Subscription to @${targetUser!.username}`;
+
+    return await stripe.subscriptions.create(
+      {
+        application_fee_percent: 20,
+        collection_method: 'charge_automatically',
+        customer: billing.stripeCustomerId,
+        default_payment_method: '',
+        items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product,
+              recurring: {
+                interval: 'month',
+                interval_count: 1,
+              },
+              unit_amount: 200,
+            },
+          },
+        ],
+        metadata: {
+          targetUserId,
+          userId,
+        },
+      },
+      { stripeAccount: targetBilling.stripeAccountId },
+    );
+  }
+
+  async retrieveBalance({ userId }: { userId: string }) {
+    const billing = await this.findOrCreateBilling({ userId });
+
+    return await stripe.balance.retrieve({
+      stripeAccount: billing.stripeAccountId,
+    });
+  }
+
+  async listExternalAccounts({ userId }: { userId: string }) {
+    const billing = await this.findOrCreateBilling({ userId });
+
+    return await stripe.accounts.listExternalAccounts(billing.stripeAccountId);
+  }
+
+  // Payments
 
   async createPayment(createPaymentDto: CreatePaymentDto) {
     return await this.paymentModel.create(createPaymentDto);
@@ -51,11 +201,17 @@ export class PaymentsService {
 
   // Billing
 
-  async findOrCreateBilling({ userId }: { userId: string }) {
+  async findOrCreateBilling({
+    userId,
+  }: {
+    userId: string;
+  }): Promise<BillingDto> {
     let billing = await this.billingModel.findOne({ userId });
 
     if (!billing) {
       const user = await this.usersService.findOneById(userId);
+
+      if (!user) throw new BadRequestException('User not found');
 
       const [customer, account] = await Promise.all([
         stripe.customers.create({
@@ -66,6 +222,7 @@ export class PaymentsService {
         stripe.accounts.create({
           email: user.email,
           metadata: { userId },
+          type: 'express',
         }),
       ]);
 
@@ -83,133 +240,6 @@ export class PaymentsService {
       );
     }
 
-    return billing;
-  }
-
-  // async createSubscriptionPayment({
-  //   userId,
-  //   targetUserId,
-  // }: {
-  //   userId: string;
-  //   targetUserId: string;
-  // }) {
-  //   const [billingUser, billingTargetUser] = await Promise.all([
-  //     this.findOrCreateBilling({ userId }),
-  //     this.findOrCreateBilling({ userId: targetUserId }),
-  //   ]);
-
-  //   const subscription = await stripe.subscriptions.create(
-  //     {
-  //       customer: billingUser.stripeCustomerId,
-  //       items: [
-  //         {
-  //           price_data: {
-  //             currency: 'usd',
-  //             product: 'Subscription to @${}',
-  //             recurring: {
-  //               interval: 'month',
-  //               interval_count: 1,
-  //             },
-  //             unit_amount: 5,
-  //           },
-  //         },
-  //       ],
-  //     },
-  //     { stripeAccount: billingTargetUser.stripeAccountId },
-  //   );
-  // }
-
-  async createSubscriptionCheckoutSession({
-    userId,
-    targetUserId,
-    subscriptionPlan,
-  }: {
-    userId: string;
-    targetUserId: string;
-    subscriptionPlan: {
-      price: number;
-      discount: number;
-      duration: number;
-    };
-  }) {
-    const [billingUser, billingTargetUser, targetUser] = await Promise.all([
-      this.findOrCreateBilling({ userId }),
-      this.findOrCreateBilling({ userId: targetUserId }),
-      this.usersService.findOneById(targetUserId),
-    ]);
-
-    const checkoutSession = await stripe.checkout.sessions.create(
-      {
-        cancel_url: 'http://localhost:3000/cancel',
-        customer: billingUser.stripeCustomerId,
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: `Subscription to @${targetUser.username}`,
-              },
-              recurring: {
-                interval: 'month',
-                interval_count: 1,
-              },
-              unit_amount:
-                subscriptionPlan.price * 100 * (1 - subscriptionPlan.discount),
-            },
-            quantity: 3,
-          },
-        ],
-        mode: 'subscription',
-        payment_method_types: ['card'],
-        success_url:
-          'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
-      },
-      {
-        stripeAccount: billingTargetUser.stripeAccountId,
-      },
-    );
-
-    return checkoutSession;
-  }
-
-  async createSetupCheckoutSession({ userId }: { userId: string }) {
-    const billing = await this.findOrCreateBilling({ userId });
-
-    return await stripe.checkout.sessions.create(
-      {
-        cancel_url: 'http://localhost:3000/cancel',
-        currency: 'usd',
-        customer: billing.stripeCustomerId,
-        mode: 'setup',
-        payment_method_types: ['card', 'link'],
-        success_url:
-          'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
-      },
-      { stripeAccount: '' },
-    );
-  }
-
-  async createPaymentCheckoutSession() {}
-
-  async createSubscriptionPaymentIntent() {
-    // return await stripe.subscriptions.create();
-    // return await stripe.subscriptions.create({
-    //   payment_settings: {
-    //     payment_method_options: {
-    //       card: '',
-    //     },
-    //   },
-    // });
-    // return await stripe.paymentIntents.create({
-    //   amount: 5,
-    //   currency: '',
-    //   customer: '',
-    //   payment_method: '',
-    // });
-  }
-
-  async getPaymentMethods({ userId }: { userId: string }) {
-    const billing = await this.findOrCreateBilling({ userId });
-    return await stripe.customers.listPaymentMethods(billing.stripeCustomerId);
+    return billing!;
   }
 }

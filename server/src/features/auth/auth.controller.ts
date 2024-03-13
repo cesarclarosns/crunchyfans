@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   Res,
@@ -35,6 +36,7 @@ import { ResetPasswordCallbackQueryDto } from './dto/reset-password-callback-que
 import { SignInDto } from './dto/sign-in.dto';
 import { SignInResponseBodyDto } from './dto/sign-in-response-body.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { RefreshTokenGuard } from './guards';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 
@@ -87,7 +89,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const user = await this.authService.signUp(signUpDto);
-    const userId = user.id;
+    const userId = user._id;
 
     const { accessToken, refreshToken } =
       await this.authService.refreshTokens(userId);
@@ -136,6 +138,18 @@ export class AuthController {
     });
 
     return;
+  }
+
+  @Put('password')
+  async updatePassword(
+    @Req() req: Request,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    const userId = req.user.sub;
+
+    updatePasswordDto.userId = userId;
+
+    return await this.authService.updatePassword(updatePasswordDto);
   }
 
   @Post('reset-password')

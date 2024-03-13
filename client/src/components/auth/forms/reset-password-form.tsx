@@ -5,7 +5,6 @@ import { AxiosError } from 'axios';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { type z } from 'zod';
 
-import { signUpSchema } from '@/common/schemas/auth/sign-up';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -18,7 +17,8 @@ import {
 import { Icons } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { resetPassword } from '@/hooks/auth';
+import { resetPassword } from '@/hooks/auth/reset-password';
+import { signUpSchema } from '@/schemas/auth/sign-up';
 
 import { useAuthFormsContext } from '../auth-forms-provider';
 
@@ -31,9 +31,7 @@ export function ResetPasswordForm() {
   const { toast } = useToast();
 
   const form = useForm<ResetPassword>({
-    defaultValues: {
-      email: '',
-    },
+    defaultValues: {},
     mode: 'all',
     resolver: zodResolver(resetPasswordSchema),
   });
@@ -94,7 +92,11 @@ export function ResetPasswordForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Email" {...field}></Input>
+                    <Input
+                      {...field}
+                      placeholder="Email"
+                      spellCheck={false}
+                    ></Input>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

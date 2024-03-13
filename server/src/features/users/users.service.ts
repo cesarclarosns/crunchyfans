@@ -1,20 +1,16 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 
-import {
-  FollowerCreatedEvent,
-  FollowerRemovedEvent,
-  FOLLOWERS_EVENTS,
-} from '../followers/events';
-import { MediaService } from '../media/media.service';
+import { MediaService } from '@/features/media/media.service';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { FindAllUsersDto } from './dto/find-all-users-dto';
-import { IncrementUserMetadataDto } from './dto/increcement-user-metadata.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserDto } from './dto/user.dto';
-import { TUserFilterQuery, User } from './entities/user.entity';
+import { PicturesDto, UserDto } from './dto/user.dto';
+import { UserInfoDto } from './dto/user-info.dto';
+import { UserProfileDto } from './dto/user-profile.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -24,12 +20,13 @@ export class UsersService {
     private readonly mediaService: MediaService,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
-    return await this.userModel.create(createUserDto);
+  async create(createUserDto: CreateUserDto): Promise<UserDto> {
+    const userCreated = await this.userModel.create(createUserDto);
+    return userCreated.toJSON();
   }
 
-  async findAll({ cursor, skip, limit, query }: FindAllUsersDto) {
-    let users = await this.userModel.aggregate([
+  async findAll({ skip, limit }: FindAllUsersDto): Promise<UserProfileDto[]> {
+    let aggregate = await this.userModel.aggregate([
       {
         $match: {},
       },
@@ -41,32 +38,50 @@ export class UsersService {
       },
     ]);
 
-    users = await this.userModel.populate(users, [
+    aggregate = await this.userModel.populate(aggregate, [
       { path: 'pictures.profilePicture' },
       { path: 'pictures.coverPicture' },
     ]);
 
+    const users: UserProfileDto[] = JSON.parse(JSON.stringify(aggregate));
+
     for (const user of users) {
-      this.downloadPictures(user);
+      await this.downloadPictures(user.pictures);
     }
 
     return users;
   }
 
-  async findOne(filter: TUserFilterQuery) {
-    return await this.userModel.findOne(filter);
+  async findOne(filter: {
+    email?: string;
+    googleId?: string;
+    username?: string;
+  }): Promise<UserDto | null> {
+    const user = await this.userModel.findOne({
+      ...(!!filter.email ? { email: filter.email } : {}),
+      ...(!!filter.username ? { username: filter.username } : {}),
+      ...(!!filter.googleId ? { 'oauth.googleId': filter.googleId } : {}),
+    });
+
+    return user?.toJSON() as UserDto | null;
   }
 
-  async findOneById(userId: string) {
-    return await this.userModel.findById(userId);
+  async findOneById(userId: string): Promise<UserDto | null> {
+    const user = await this.userModel.findById(userId);
+
+    return user?.toJSON() as UserDto | null;
   }
 
-  async findOneByEmail(email: string) {
-    return await this.userModel.findOne({ email });
+  async findOneByEmail(email: string): Promise<UserDto | null> {
+    const user = await this.userModel.findOne({ email });
+
+    return user?.toJSON() as UserDto | null;
   }
 
-  async findOneByGoogleId(google_id: string) {
-    return await this.userModel.findOne({ google_id });
+  async findOneByGoogleId(googleId: string): Promise<UserDto | null> {
+    const user = await this.userModel.findOne({ 'oauth.googleId': googleId });
+
+    return user?.toJSON() as UserDto | null;
   }
 
   async update(userId: string, updateUserDto: UpdateUserDto) {
@@ -79,21 +94,18 @@ export class UsersService {
     );
   }
 
-  async findInfoById(userId: string) {
-    const user = (
-      await this.userModel
-        .findById(userId, {
-          oauth: 0,
-          password: 0,
-        })
-        .populate([
-          { path: 'pictures.profilePicture' },
-          { path: 'pictures.coverPicture' },
-        ])
-    )?.toJSON();
+  async findInfoById(userId: string): Promise<UserInfoDto | null> {
+    const _user = await this.userModel
+      .findById(userId, {
+        oauth: 0,
+        password: 0,
+      })
+      .populate([{ path: 'pictures.profilePicture' }]);
+
+    const user = _user?.toJSON() as UserInfoDto | null;
 
     if (user) {
-      this.downloadPictures(user as unknown as UserDto);
+      await this.downloadPictures(user.pictures);
     }
 
     return user;
@@ -105,8 +117,8 @@ export class UsersService {
   }: {
     username: string;
     requesterId?: string;
-  }) {
-    let users = await this.userModel.aggregate([
+  }): Promise<UserProfileDto | null> {
+    let aggregate = await this.userModel.aggregate([
       {
         $match: {
           username,
@@ -153,96 +165,24 @@ export class UsersService {
       },
     ]);
 
-    users = await this.userModel.populate(users, [
+    aggregate = await this.userModel.populate(aggregate, [
       { path: 'pictures.profilePicture' },
-      { path: 'pictures.coverPicture' },
     ]);
 
-    let user = users.at(0);
+    const user = JSON.parse(JSON.stringify(aggregate)).at(
+      0,
+    ) as UserProfileDto | null;
 
     if (user) {
-      user = JSON.parse(JSON.stringify(user));
-      this.downloadPictures(user as unknown as UserDto);
+      await this.downloadPictures(user.pictures);
     }
 
     return user;
   }
 
-  // Events
-  @OnEvent(FOLLOWERS_EVENTS.FollowerCreated, { promisify: true })
-  async handleFolllowersFollowerCreated(payload: FollowerCreatedEvent) {
-    const session = await this.connection.startSession();
-
-    try {
-      await session.withTransaction(async () => {
-        const { followeeId, followerId } = payload;
-
-        await Promise.all([
-          this.userModel.updateOne(
-            { _id: followerId },
-            {
-              $inc: {
-                'metadata.followeesCount': 1,
-              },
-            },
-          ),
-          this.userModel.updateOne(
-            { _id: followeeId },
-            {
-              $inc: {
-                'metadata.followersCount': 1,
-              },
-            },
-          ),
-        ]);
-      });
-    } catch (err) {
-      throw err;
-    } finally {
-      await session.endSession();
-    }
-  }
-
-  @OnEvent(FOLLOWERS_EVENTS.FollowerRemoved, { promisify: true })
-  async handleFollowersFollowerRemoved(payload: FollowerRemovedEvent) {
-    const session = await this.connection.startSession();
-
-    await session.withTransaction(async () => {
-      const { followeeId, followerId } = payload;
-
-      await Promise.all([
-        this.userModel.updateOne(
-          { _id: followerId },
-          {
-            $inc: {
-              'metadata.followeesCount': -1,
-            },
-          },
-        ),
-        this.userModel.updateOne(
-          { _id: followeeId },
-          {
-            $inc: {
-              'metadata.followersCount': -1,
-            },
-          },
-        ),
-      ]);
-    });
-
-    await session.endSession();
-  }
-
-  // Utils
-
-  downloadPictures(user: UserDto) {
-    if (user?.pictures) {
-      if (user.pictures?.coverPicture) {
-        this.mediaService.downloadMedia(user.pictures.coverPicture);
-      }
-      if (user.pictures?.profilePicture) {
-        this.mediaService.downloadMedia(user.pictures.profilePicture);
-      }
+  async downloadPictures(pictures: PicturesDto): Promise<void> {
+    if (pictures.profilePicture) {
+      await this.mediaService.downloadMedia(pictures.profilePicture);
     }
   }
 }

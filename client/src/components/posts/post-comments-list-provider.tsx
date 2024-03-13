@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { type PostComment } from '@/models/post/post-comment';
+import { type PostComment } from '@/schemas/posts/post-comment';
 
 export interface PostCommentsListContextProps {
   onReply: (postComment: PostComment) => void;

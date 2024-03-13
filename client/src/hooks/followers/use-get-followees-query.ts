@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type Follower } from '@/models/followers/follower';
+import { type Follower } from '@/schemas/followers/follower';
 
 const DEFAULT_LIMIT = 10;
 

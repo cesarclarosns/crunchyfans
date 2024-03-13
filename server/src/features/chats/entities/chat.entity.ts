@@ -10,7 +10,7 @@ import { User } from '@/features/users/entities/user.entity';
   versionKey: false,
 })
 export class Chat extends Document {
-  @Factory((faker, ctx) => ctx.participants)
+  @Factory((faker, ctx) => ctx!.participants)
   @Prop({
     ref: User.name,
     required: true,
@@ -21,4 +21,4 @@ export class Chat extends Document {
 
 export const ChatSchema = SchemaFactory.createForClass(Chat);
 
-export type TChatFilterQuery = FilterQuery<Chat>;
+export type ChatFilterQuery = FilterQuery<Chat>;

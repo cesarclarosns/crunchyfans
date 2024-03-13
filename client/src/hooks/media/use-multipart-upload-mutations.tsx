@@ -60,8 +60,7 @@ export function useMultipartUploadMutations() {
       return response.data;
     },
     retry: (failureCount, error) => {
-      if (axios.isCancel(error)) return false;
-      return true;
+      return !axios.isCancel(error);
     },
   });
 
@@ -93,8 +92,7 @@ export function useMultipartUploadMutations() {
       return { etag };
     },
     retry: (failureCount, error) => {
-      if (axios.isCancel(error)) return false;
-      return true;
+      return !axios.isCancel(error);
     },
   });
 
@@ -124,8 +122,7 @@ export function useMultipartUploadMutations() {
       return response.data;
     },
     retry: (failureCount, error) => {
-      if (axios.isCancel(error)) return false;
-      return true;
+      return !axios.isCancel(error);
     },
   });
 
@@ -153,8 +150,7 @@ export function useMultipartUploadMutations() {
       return response.data;
     },
     retry: (failureCount, error) => {
-      if (axios.isCancel(error)) return false;
-      return true;
+      return !axios.isCancel(error);
     },
   });
 

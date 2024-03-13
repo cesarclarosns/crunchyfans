@@ -1,12 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 
-import { Follower } from '../followers/entities/follower.entity';
-import { FOLLOWER_STATUS } from '../followers/followers.constants';
 import { MediaService } from '../media/media.service';
-import { StorageService } from '../media/storage.service';
-import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreatePostCommentDto } from './dto/create-post-comment.dto';
@@ -16,7 +12,7 @@ import { GetFeedDto } from './dto/get-feed.dto';
 import { PostDto } from './dto/post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { UpdatePostCommentDto } from './dto/update-post-comment.dto';
-import { Post, TPostFilterQuery } from './entities/post.entity';
+import { Post } from './entities/post.entity';
 import {
   PostComment,
   TPostCommentFilterQuery,
@@ -34,7 +30,6 @@ export class PostsService {
     private readonly postCommentModel: Model<PostComment>,
     @InjectModel(PostCommentLike.name)
     private readonly postCommentLikeModel: Model<PostCommentLike>,
-    @InjectModel(Follower.name) private readonly followerModel: Model<Follower>,
     private readonly usersService: UsersService,
     private readonly mediaService: MediaService,
   ) {}
@@ -44,116 +39,116 @@ export class PostsService {
     return post;
   }
 
-  async getFeed({ skip, limit, cursor, userId }: GetFeedDto) {
-    let posts = await this.followerModel.aggregate([
-      {
-        $match: {
-          followerId: new mongoose.Types.ObjectId(userId),
-          status: FOLLOWER_STATUS.accepted,
-        },
-      },
-      {
-        $lookup: {
-          as: 'posts',
-          foreignField: 'userId',
-          from: 'posts',
-          localField: 'followeeId',
-          pipeline: [
-            ...(!!cursor
-              ? [
-                  {
-                    $match: {
-                      _id: {
-                        $lt: new mongoose.Types.ObjectId(cursor),
-                      },
-                    },
-                  },
-                ]
-              : []),
-            {
-              $set: {
-                createdAt: {
-                  $toDate: '$_id',
-                },
-              },
-            },
-          ],
-        },
-      },
-      {
-        $unwind: '$posts',
-      },
-      {
-        $replaceWith: '$posts',
-      },
-      {
-        $sort: {
-          _id: -1,
-        },
-      },
-      {
-        $skip: +skip,
-      },
-      {
-        $limit: +limit,
-      },
-      {
-        $lookup: {
-          as: 'isLiked',
-          foreignField: 'postId',
-          from: 'postLikes',
-          localField: '_id',
-          pipeline: [
-            {
-              $match: {
-                userId: new mongoose.Types.ObjectId(userId),
-              },
-            },
-          ],
-        },
-      },
-      {
-        $set: {
-          isLiked: {
-            $cond: {
-              else: false,
-              if: {
-                $ne: ['$isLiked', []],
-              },
-              then: true,
-            },
-          },
-        },
-      },
-    ]);
+  // async getFeed({ skip, limit, cursor, userId }: GetFeedDto) {
+  //   let posts = await this.followerModel.aggregate([
+  //     {
+  //       $match: {
+  //         followerId: new mongoose.Types.ObjectId(userId),
+  //         status: FOLLOWER_STATUS.accepted,
+  //       },
+  //     },
+  //     {
+  //       $lookup: {
+  //         as: 'posts',
+  //         foreignField: 'userId',
+  //         from: 'posts',
+  //         localField: 'followeeId',
+  //         pipeline: [
+  //           ...(!!cursor
+  //             ? [
+  //                 {
+  //                   $match: {
+  //                     _id: {
+  //                       $lt: new mongoose.Types.ObjectId(cursor),
+  //                     },
+  //                   },
+  //                 },
+  //               ]
+  //             : []),
+  //           {
+  //             $set: {
+  //               createdAt: {
+  //                 $toDate: '$_id',
+  //               },
+  //             },
+  //           },
+  //         ],
+  //       },
+  //     },
+  //     {
+  //       $unwind: '$posts',
+  //     },
+  //     {
+  //       $replaceWith: '$posts',
+  //     },
+  //     {
+  //       $sort: {
+  //         _id: -1,
+  //       },
+  //     },
+  //     {
+  //       $skip: +skip,
+  //     },
+  //     {
+  //       $limit: +limit,
+  //     },
+  //     {
+  //       $lookup: {
+  //         as: 'isLiked',
+  //         foreignField: 'postId',
+  //         from: 'postLikes',
+  //         localField: '_id',
+  //         pipeline: [
+  //           {
+  //             $match: {
+  //               userId: new mongoose.Types.ObjectId(userId),
+  //             },
+  //           },
+  //         ],
+  //       },
+  //     },
+  //     {
+  //       $set: {
+  //         isLiked: {
+  //           $cond: {
+  //             else: false,
+  //             if: {
+  //               $ne: ['$isLiked', []],
+  //             },
+  //             then: true,
+  //           },
+  //         },
+  //       },
+  //     },
+  //   ]);
 
-    posts = await this.postModel.populate(posts, [
-      {
-        path: 'user',
-        populate: { path: 'pictures.profilePicture' },
-        select: '-password -oauth -settings -metadata',
-      },
-      { path: 'media' },
-    ]);
+  //   posts = await this.postModel.populate(posts, [
+  //     {
+  //       path: 'user',
+  //       populate: { path: 'pictures.profilePicture' },
+  //       select: '-password -oauth -settings -metadata',
+  //     },
+  //     { path: 'media' },
+  //   ]);
 
-    posts = JSON.parse(JSON.stringify(posts));
+  //   posts = JSON.parse(JSON.stringify(posts));
 
-    for (const post of posts as PostDto[]) {
-      if (post.user) {
-        this.usersService.downloadPictures(post.user);
-      }
-      if (post.media) {
-        for (const media of post.media) {
-          this.mediaService.downloadMedia(media);
-        }
-      }
-    }
+  //   for (const post of posts as PostDto[]) {
+  //     if (post.user) {
+  //       this.usersService.downloadPictures(post.user);
+  //     }
+  //     if (post.media) {
+  //       for (const media of post.media) {
+  //         this.mediaService.downloadMedia(media);
+  //       }
+  //     }
+  //   }
 
-    return posts;
-  }
+  //   return posts;
+  // }
 
   async findAllPosts({ limit, skip, user, cursor, userId }: FindAllPostsDto) {
-    let posts = await this.postModel.aggregate([
+    let aggregate = await this.postModel.aggregate([
       {
         $match: {
           ...(!!user
@@ -218,7 +213,7 @@ export class PostsService {
         : []),
     ]);
 
-    posts = await this.postModel.populate(posts, [
+    aggregate = await this.postModel.populate(aggregate, [
       {
         path: 'user',
         populate: {
@@ -229,11 +224,11 @@ export class PostsService {
       { path: 'media' },
     ]);
 
-    posts = JSON.parse(JSON.stringify(posts));
+    const posts: PostDto[] = JSON.parse(JSON.stringify(aggregate));
 
-    for (const post of posts as PostDto[]) {
-      if (post.user) {
-        this.usersService.downloadPictures(post.user);
+    for (const post of posts) {
+      if (post.user?.pictures) {
+        this.usersService.downloadPictures(post.user.pictures);
       }
       if (post.media) {
         for (const media of post.media) {
@@ -252,7 +247,7 @@ export class PostsService {
     postId: string;
     requesterId: string;
   }) {
-    let posts = await this.postModel.aggregate([
+    let aggregate = await this.postModel.aggregate([
       {
         $match: {
           _id: new mongoose.Types.ObjectId(postId),
@@ -297,7 +292,7 @@ export class PostsService {
         : []),
     ]);
 
-    posts = await this.postModel.populate(posts, [
+    aggregate = await this.postModel.populate(aggregate, [
       {
         path: 'user',
         populate: {
@@ -308,11 +303,11 @@ export class PostsService {
       { path: 'media' },
     ]);
 
-    posts = JSON.parse(JSON.stringify(posts));
+    const posts: PostDto[] = JSON.parse(JSON.stringify(aggregate));
 
-    for (const post of posts as PostDto[]) {
-      if (post.user) {
-        this.usersService.downloadPictures(post.user);
+    for (const post of posts) {
+      if (post.user?.pictures) {
+        this.usersService.downloadPictures(post.user.pictures);
       }
       if (post.media) {
         for (const media of post.media) {
@@ -458,7 +453,7 @@ export class PostsService {
     cursor,
     userId,
   }: FindAllPostCommentsDto) {
-    let postComments = await this.postCommentModel.aggregate([
+    let aggregate = await this.postCommentModel.aggregate([
       {
         $match: {
           postId: new mongoose.Types.ObjectId(postId),
@@ -530,17 +525,17 @@ export class PostsService {
         : []),
     ]);
 
-    postComments = await this.postCommentModel.populate(postComments, [
+    aggregate = await this.postCommentModel.populate(aggregate, [
       {
         path: 'user',
         populate: {
           path: 'pictures.profilePicture',
         },
-        select: '-password -oauth -settings -metadata',
+        select: '_id email username displayName pictures',
       },
     ]);
 
-    postComments = JSON.parse(JSON.stringify(postComments));
+    const postComments = JSON.parse(JSON.stringify(aggregate));
 
     for (const postComment of postComments) {
       if (postComment.user) {
@@ -564,6 +559,7 @@ export class PostsService {
     const postComment = await this.postCommentModel.findById(
       filter.postCommentId,
     );
+    if (!postComment) throw new BadRequestException('Post not found');
 
     try {
       await session.withTransaction(async () => {

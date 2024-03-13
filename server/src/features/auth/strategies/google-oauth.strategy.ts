@@ -40,7 +40,8 @@ export class GoogleOAuthStrategy extends PassportStrategy(
 
     try {
       let user = await this.usersService.findOne({
-        $or: [...(!!email ? [{ email }] : []), { googleId }],
+        email,
+        googleId,
       });
 
       if (!user) {
@@ -62,7 +63,7 @@ export class GoogleOAuthStrategy extends PassportStrategy(
 
       done(null, payload);
     } catch (err) {
-      done(err, null);
+      done(err);
     }
   }
 }

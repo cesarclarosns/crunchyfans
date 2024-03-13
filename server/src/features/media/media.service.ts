@@ -1,8 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { validateEventEmitterAsyncResults } from '@/common/libs/utils';
 import { config } from '@/config';
 
 import { CreateMediaDto } from './dto/create-media.dto';
@@ -13,60 +20,46 @@ import { CreateUploadQueryDto } from './dto/create-upload-query.dto';
 import { DeleteMultipartUploadDto } from './dto/delete-multipart-upload.dto';
 import { MediaDto } from './dto/media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
-import { Media, TMediaFilterQuery } from './entities/media.entity';
+import { Media } from './entities/media.entity';
 import { MEDIA_EVENTS } from './events';
 import { MediaCreatedEvent } from './events/media-created.event';
-import { FORMAT_QUALITY, TRANSCODING_STATUS } from './media.constants';
-import {
-  getFileFormatFromFileName,
-  getMediaTypeFromFileName,
-} from './media.utils';
+import { TRANSCODING_STATUS } from './media.constants';
+import { getMediaTypeFromFileKey } from './media.utils';
+import { TranscodeSubmitProducer } from './producers/transcode-submit.producer';
 import { StorageService } from './storage.service';
 
 @Injectable()
 export class MediaService {
   constructor(
+    @InjectPinoLogger(MediaService.name) private readonly logger: PinoLogger,
     @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(Media.name) private readonly mediaModel: Model<Media>,
     private readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
+    private readonly transcodeSubmitProducer: TranscodeSubmitProducer,
   ) {}
 
   async create(createMediaParamsDto: CreateMediaParamsDto) {
     const { fileKey, userId } = createMediaParamsDto;
+    const mediaType = getMediaTypeFromFileKey(fileKey);
 
     const session = await this.connection.startSession();
 
     try {
-      session.withTransaction(async () => {
+      return await session.withTransaction(async () => {
         const createMediaDto = new CreateMediaDto();
-        createMediaDto._id = new mongoose.Types.ObjectId().toString();
         createMediaDto.userId = userId;
-        createMediaDto.mediaType = 'image';
+        createMediaDto.mediaType = mediaType;
         createMediaDto.processing = {
           fileKey,
           transcodingStatus: TRANSCODING_STATUS.submit,
         };
-        createMediaDto.sources = [
-          {
-            fileKey,
-            quality: FORMAT_QUALITY.original,
-          },
-        ];
 
         const media = (
           await this.mediaModel.create([createMediaDto], {
             session,
           })
-        ).at(0);
-
-        await this.eventEmitter.emitAsync(
-          MEDIA_EVENTS.MediaCreated,
-          new MediaCreatedEvent({
-            fileKey,
-            mediaId: media._id.toString(),
-          } as any),
-        );
+        ).at(0)!;
 
         return media;
       });
@@ -77,7 +70,7 @@ export class MediaService {
     }
   }
 
-  async findAll(filter: TMediaFilterQuery) {
+  async findAll(filter: any) {
     let media: MediaDto[] = await this.mediaModel.find(filter);
     media = JSON.parse(JSON.stringify(media));
 
@@ -106,8 +99,9 @@ export class MediaService {
   }
 
   // Uploads
+
   async createUpload({ fileKey }: CreateUploadQueryDto) {
-    const bucket = config.STORAGE.S3_BUCKET_MEDIA;
+    const bucket = config.STORAGE.S3_BUCKET_MEDIA_PROCESSING;
 
     const url = await this.storageService.createUploadSignedUrl({
       bucket,
@@ -120,7 +114,7 @@ export class MediaService {
     { uploadId, uploads, partNumber, fileKey }: CreateMultipartUploadQueryDto,
     { parts }: CreateMultipartUploadDto,
   ) {
-    const bucket = config.STORAGE.S3_BUCKET_MEDIA;
+    const bucket = config.STORAGE.S3_BUCKET_MEDIA_PROCESSING;
 
     // Create multipartUpload
     if (uploads !== undefined) {
@@ -131,7 +125,7 @@ export class MediaService {
     }
 
     // Create uploadPartSignedUrl
-    if (partNumber !== undefined && uploadId !== undefined) {
+    if (!!partNumber && !!uploadId) {
       const url = await this.storageService.createUploadPartSignedUrl({
         bucket,
         fileKey,
@@ -143,7 +137,7 @@ export class MediaService {
     }
 
     // Complete multipartUpload
-    if (uploadId !== undefined) {
+    if (!!uploadId && !!parts) {
       return await this.storageService.completeMultipartUpload({
         bucket,
         fileKey,
@@ -156,7 +150,7 @@ export class MediaService {
   }
 
   async deleteMultipartUpload({ fileKey, uploadId }: DeleteMultipartUploadDto) {
-    const bucket = config.STORAGE.S3_BUCKET_MEDIA;
+    const bucket = config.STORAGE.S3_BUCKET_MEDIA_PROCESSING;
 
     return await this.storageService.deleteMultipartUpload({
       bucket,
@@ -165,19 +159,29 @@ export class MediaService {
     });
   }
 
-  downloadMedia(media: MediaDto) {
+  // Downloads
+
+  async downloadMedia(media: MediaDto) {
     if (media.sources) {
-      for (const source of media.sources) {
-        if (source.fileKey)
-          source.fileUrl = this.storageService.download(source.fileKey);
-      }
+      await Promise.all(
+        media.sources.map(async (source) => {
+          if (source.fileKey) {
+            source.fileUrl = await this.storageService.download(source.fileKey);
+          }
+        }),
+      );
     }
 
     if (media.thumbnails) {
-      for (const thumbnail of media.thumbnails) {
-        if (thumbnail.fileKey)
-          thumbnail.fileUrl = this.storageService.download(thumbnail.fileKey);
-      }
+      await Promise.all(
+        media.thumbnails.map(async (thumbnail) => {
+          if (thumbnail.fileKey) {
+            thumbnail.fileUrl = await this.storageService.download(
+              thumbnail.fileKey,
+            );
+          }
+        }),
+      );
     }
   }
 }

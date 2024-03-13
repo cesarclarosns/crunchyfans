@@ -1,7 +1,7 @@
 import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type PostComment } from '@/models/post/post-comment';
+import { type PostComment } from '@/schemas/posts/post-comment';
 
 import { postsKeys } from './posts-keys';
 

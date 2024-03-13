@@ -4,7 +4,7 @@ import { useCallback, useContext, useMemo, useState } from 'react';
 import { useCreatePostCommentLikeMutation } from '@/hooks/posts/use-create-post-comment-like-mutation';
 import { useDeletePostCommentLikeMutation } from '@/hooks/posts/use-delete-post-comment-like-mutation';
 import { cn } from '@/libs/utils';
-import { type PostComment as PostCommentModel } from '@/models/post/post-comment';
+import { type PostComment as PostCommentModel } from '@/schemas/posts/post-comment';
 
 import { Icons } from '../ui/icons';
 import { UserAvatar } from '../users/user-avatar';

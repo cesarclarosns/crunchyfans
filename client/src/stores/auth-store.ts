@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 
-import { type User } from '@/models/users/user';
-
-interface Auth {
-  accessToken: string;
-}
+import { type Auth } from '@/schemas/auth/auth';
 
 interface AuthState {
   auth: Auth | null;

@@ -17,21 +17,17 @@ import { ObjectValues } from '@/common/types/object-values.type';
 
 import { USER_STATUS } from '../users.constants';
 
-class OAuth {
+class OAuthDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
   googleId?: string;
 }
 
-class Pictures {
+class PicturesDto {
   @IsObjectId()
   @IsOptional()
   profilePicture: string;
-
-  @IsObjectId()
-  @IsOptional()
-  coverPicture: string;
 }
 
 class SettingsDto {
@@ -67,12 +63,10 @@ export class CreateUserDto {
   @IsOptional()
   bio?: string;
 
-  pictures: Pictures;
-
-  @Type(() => OAuth)
+  @Type(() => OAuthDto)
   @ValidateNested()
   @IsOptional()
-  oauth: OAuth;
+  oauth?: OAuthDto;
 
   @Type(() => SettingsDto)
   @ValidateNested()

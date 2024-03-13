@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type Chat } from '@/models/chats/chat';
+import { type Chat } from '@/schemas/chats/chat';
 
 export function useCreateChatMutation() {
   return useMutation({

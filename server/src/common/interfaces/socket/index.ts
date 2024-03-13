@@ -1,6 +1,8 @@
 import { Server, Socket } from 'socket.io';
 
 import { TokenPayload } from '@/features/auth/auth.types';
+import { ChatDto } from '@/features/chats/dto/chat.dto';
+import { MessageDto } from '@/features/chats/dto/message.dto';
 
 export type DefaultCallbackResponse<TPayload> =
   | {
@@ -29,14 +31,6 @@ export type ClientToServerEvents = {
     cb: (response: DefaultCallbackResponse<null>) => void,
   ) => void;
 
-  'chats/read-message': (
-    ev: {
-      chatId: string;
-      messageId: string;
-    },
-    cb: (response: DefaultCallbackResponse<null>) => void,
-  ) => void;
-
   'users/get-status': (
     ev: { users: string[] },
     cb: (
@@ -49,13 +43,11 @@ export type ClientToServerEvents = {
 };
 
 export type ServerToClientEvents = {
-  'chats/new-chat': (ev: { chatId: string; chat: any }) => void;
-
-  'chats/new-message': (ev: { chatId: string; message: any }) => void;
+  'chats/new-message': (ev: { message: MessageDto; chat: ChatDto }) => void;
 
   'chats/user-typing': (ev: { chatId: string; userId: string }) => void;
 
-  'chats/read-message': (ev: {
+  'chats/message-read': (ev: {
     chatId: string;
     messageId: string;
     userId: string;

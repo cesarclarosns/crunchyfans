@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { FollowersModule } from '../followers/followers.module';
 import { MediaModule } from '../media/media.module';
 import { UsersModule } from '../users/users.module';
 import { Post, PostSchema } from './entities/post.entity';
@@ -19,7 +18,6 @@ import { PostsService } from './posts.service';
   imports: [
     UsersModule,
     MediaModule,
-    FollowersModule,
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
       { name: PostLike.name, schema: PostLikeSchema },

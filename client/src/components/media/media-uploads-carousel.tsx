@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/carousel';
 import { Icons } from '@/components/ui/icons';
 import { Progress } from '@/components/ui/progress';
-import { type useUploadMedia } from '@/hooks/media';
 import { type UseUploadMedia } from '@/hooks/media/use-upload-media';
 import { cn } from '@/libs/utils';
 

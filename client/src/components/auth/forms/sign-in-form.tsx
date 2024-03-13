@@ -5,7 +5,6 @@ import { AxiosError } from 'axios';
 import { useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 
-import { type SignIn, signInSchema } from '@/common/schemas/auth/sign-in';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -17,14 +16,15 @@ import {
 } from '@/components/ui/form';
 import { Icons } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
-import { useSignIn } from '@/hooks/auth';
+import { useSignInMutation } from '@/hooks/auth/use-sign-in-mutation';
+import { type SignIn, signInSchema } from '@/schemas/auth/sign-in';
 
 import { useAuthFormsContext } from '../auth-forms-provider';
 import { SocialSignIn } from './social-sign-in';
 
 export function SignInForm() {
   const { setCurrentForm } = useAuthFormsContext();
-  const { signIn } = useSignIn();
+  const { mutateAsync } = useSignInMutation();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -39,7 +39,7 @@ export function SignInForm() {
 
   const onSubmit: SubmitHandler<SignIn> = async (data) => {
     try {
-      await signIn(data);
+      await mutateAsync(data);
     } catch (err) {
       if (err instanceof AxiosError) {
         const data = err.response?.data as Record<

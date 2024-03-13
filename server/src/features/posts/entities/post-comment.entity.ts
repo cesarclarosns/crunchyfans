@@ -31,33 +31,37 @@ const PostCommentMetadataSchema =
   virtuals: true,
 })
 export class PostComment extends Document {
-  @Factory((faker, ctx) => ctx._id)
+  @Factory((faker) => {
+    return mongoose.Types.ObjectId.createFromTime(
+      faker!.date.recent({ days: 90 }).getTime() / 1000,
+    );
+  })
   @Prop({
     default: () => new mongoose.Types.ObjectId(),
     type: mongoose.Schema.Types.ObjectId,
   })
   _id: mongoose.Types.ObjectId;
 
-  @Factory((faker, ctx) => ctx.postId)
+  @Factory((faker, ctx) => ctx!.postId)
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   postId: mongoose.Types.ObjectId;
 
-  @Factory((faker, ctx) => ctx.postCommentId)
+  @Factory((faker, ctx) => ctx!.postCommentId)
   @Prop({ required: false, type: mongoose.Schema.Types.ObjectId })
   postCommentId: mongoose.Types.ObjectId;
 
-  @Factory((faker, ctx) => ctx.userId)
+  @Factory((faker, ctx) => ctx!.userId)
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   userId: mongoose.Types.ObjectId;
 
-  @Factory((faker) => faker.word.words({ count: { max: 15, min: 10 } }))
+  @Factory((faker) => faker!.word.words({ count: { max: 15, min: 10 } }))
   @Prop({
     required: true,
     type: String,
   })
   content: string;
 
-  @Factory((faker, ctx) => ctx.gifs ?? [])
+  @Factory((faker, ctx) => ctx!.gifs ?? [])
   @Prop({ default: [], type: [String] })
   gifs: string[];
 

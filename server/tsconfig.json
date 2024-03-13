@@ -13,16 +13,16 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/": ["src/"],
-      "@/*": ["src/*"],
+      "@/*": ["src/*"]
     },
     "jsx": "react-jsx",
-    "typeRoots": ["./node_modules/@types", "./src/types.d.ts"],
-  },
+    "typeRoots": ["./node_modules/@types", "./src/types.d.ts"]
+  }
 }

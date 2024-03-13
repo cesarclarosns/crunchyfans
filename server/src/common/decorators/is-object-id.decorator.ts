@@ -12,7 +12,7 @@ export function IsObjectId(
       target: object.constructor,
       validator: {
         defaultMessage: (validationArguments) => {
-          return `${validationArguments.property} is not a valid ObjectId`;
+          return `${validationArguments?.property} is not a valid ObjectId`;
         },
         validate(value: any) {
           return MongooseTypes.ObjectId.isValid(value);

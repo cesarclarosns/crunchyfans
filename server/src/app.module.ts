@@ -12,14 +12,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { SqsModule } from '@ssut/nestjs-sqs';
 import { LoggerModule } from 'nestjs-pino';
 
-// import configuration, {
-//   CONFIG_VALUES,
-//   configurationValidationSchema,
-// } from '@/config/config';
 import { AuthModule } from '@/features/auth/auth.module';
 import { AccessTokenGuard } from '@/features/auth/guards';
 import { EmailModule } from '@/features/email/email.module';
-import { FollowersModule } from '@/features/followers/followers.module';
 import { HealthModule } from '@/features/health/health.module';
 import { MediaModule } from '@/features/media/media.module';
 import { NotificationsModule } from '@/features/notifications/notifications.module';
@@ -32,27 +27,21 @@ import { UsersModule } from '@/features/users/users.module';
 // import redisStore from 'cache-manager-redis-store';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { config } from './config';
+import { AWS_SQS_ENDPOINT_URL, config } from './config';
 import { ChatsModule } from './features/chats/chats.module';
-import { SnsModule } from './providers/sns/sns.module';
 
 @Module({
   controllers: [AppController],
   imports: [
-    // ConfigModule.forRoot({
-    //   cache: true,
-    //   isGlobal: true,
-    //   load: [config],
-    //   validate: () => {
-    //     return configSchema.parse(config());
-    //   },
-    // }),
     LoggerModule.forRoot({
       pinoHttp: {
+        level: 'trace',
         transport: {
+          levels: {},
           target: 'pino-pretty',
         },
       },
+      useExisting: true,
     }),
     EventEmitterModule.forRoot({
       delimiter: '.',
@@ -61,16 +50,9 @@ import { SnsModule } from './providers/sns/sns.module';
       verboseMemoryLeak: false,
       wildcard: false,
     }),
-    // ThrottlerModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   inject: [ConfigService],
-    //   useFactory: (configService: ConfigService) => [
-    //     {
-    //       limit: configService.getOrThrow<number>(
-    //         CONFIG_VALUES.THROTTLER.LIMIT,
-    //       ),
-    //       ttl: configService.getOrThrow<number>(CONFIG_VALUES.THROTTLER.TTL),
-    //     },
+    // ThrottlerModule.forRoot({
+    //   throttlers: [
+    //     { limit: config.THROTTLER.LIMIT, ttl: config.THROTTLER.TTL },
     //   ],
     // }),
     MongooseModule.forRoot(config.DATABASE.URI),
@@ -80,7 +62,6 @@ import { SnsModule } from './providers/sns/sns.module';
     //     url: configService.getOrThrow<string>(CONFIG_VALUES.cache.url),
     //   }),
     // }),
-
     SqsModule.registerAsync({
       useFactory: async () => {
         const sqs = new SQSClient({
@@ -88,47 +69,35 @@ import { SnsModule } from './providers/sns/sns.module';
             accessKeyId: config.AWS.ACCESS_KEY_ID,
             secretAccessKey: config.AWS.SECRET_ACCESS_KEY,
           },
+          endpoint: AWS_SQS_ENDPOINT_URL,
           region: config.AWS.REGION,
         });
 
         return {
           consumers: [
-            // {
-            //   batchSize: 1,
-            //   name: configService.getOrThrow<string>(
-            //     CONFIG_VALUES.EVENTS
-            //       .SQS_QUEUE_MEDIA_TRANSCODE_IMAGE_COMPLETE_NAME,
-            //   ),
-            //   queueUrl: configService.getOrThrow<string>(
-            //     CONFIG_VALUES.EVENTS
-            //       .SQS_QUEUE_MEDIA_TRANSCODE_IMAGE_COMPLETE_URL,
-            //   ),
-            //   sqs,
-            // },
-            // {
-            //   batchSize: 1,
-            //   name: configService.getOrThrow<string>(
-            //     CONFIG_VALUES.EVENTS
-            //       .SQS_QUEUE_MEDIA_TRANSCODE_VIDEO_COMPLETE_NAME,
-            //   ),
-            //   queueUrl: configService.getOrThrow<string>(
-            //     CONFIG_VALUES.EVENTS
-            //       .SQS_QUEUE_MEDIA_TRANSCODE_VIDEO_COMPLETE_URL,
-            //   ),
-            //   sqs,
-            // },
+            {
+              batchSize: 1,
+              name: config.EVENTS.SQS_QUEUE_MEDIA_TRANSCODE_COMPLETE_NAME,
+              queueUrl: config.EVENTS.SQS_QUEUE_MEDIA_TRANSCODE_COMPLETE_URL,
+              sqs,
+            },
           ],
-          producers: [],
+          producers: [
+            {
+              batchSize: 1,
+              name: config.EVENTS.SQS_QUEUE_MEDIA_TRANSCODE_SUBMIT_NAME,
+              queueUrl: config.EVENTS.SQS_QUEUE_MEDIA_TRANSCODE_SUBMIT_URL,
+              sqs,
+            },
+          ],
         };
       },
     }),
-    SnsModule,
     AuthModule,
     MediaModule,
     NotificationsModule,
     UsersModule,
     EmailModule,
-    FollowersModule,
     HealthModule,
     PaymentsModule,
     PostsModule,

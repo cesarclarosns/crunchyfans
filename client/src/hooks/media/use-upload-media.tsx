@@ -8,9 +8,9 @@ import {
   getNumberOfParts,
   megabytesToBytes,
 } from '@/libs/media';
-import { type Media } from '@/models/media/media';
+import { type Media } from '@/schemas/media/media';
 
-import { useGetCurrentUserQuery } from '../users';
+import { useGetCurrentUserQuery } from '../users/use-get-current-user-query';
 import { useCreateMediaMutation } from './use-create-media-mutation';
 import { useMultipartUploadMutations } from './use-multipart-upload-mutations';
 import { useUploadMutations } from './use-upload-mutations';
@@ -99,7 +99,7 @@ export function useUploadMedia() {
   }
 
   function handleRemoveUpload(upload: Upload) {
-    console.log('handleRemoveUpload', { upload, uploadsRef });
+    // console.log('handleRemoveUpload', { upload, uploadsRef });
     let index = uploadsRef.current.findIndex(
       ({ file }) => file.name == upload.file.name,
     );
@@ -205,7 +205,7 @@ export function useUploadMedia() {
       });
       setUploads([...uploadsRef.current]);
     } catch (err) {
-      console.log(err);
+      console.error(err);
 
       // Update upload
       uploadsRef.current.forEach((upload) => {
@@ -258,7 +258,7 @@ export function useUploadMedia() {
       });
       setUploads([...uploadsRef.current]);
     } catch (err) {
-      console.log(err);
+      console.error(err);
 
       // Update upload
       uploadsRef.current.forEach((upload) => {

@@ -2,16 +2,16 @@ import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
   UploadPartCommand,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl as getCloudfrontSignedUrl } from '@aws-sdk/cloudfront-signer';
+// import { getSignedUrl as getCloudfrontSignedUrl } from '@aws-sdk/cloudfront-signer';
 import { getSignedUrl as getS3SignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
-import { addDays } from 'date-fns';
 
-import { config } from '@/config';
+import { AWS_S3_ENDPOINT_URL, config } from '@/config';
 
 @Injectable()
 export class StorageService {
@@ -20,6 +20,8 @@ export class StorageService {
       accessKeyId: config.AWS.ACCESS_KEY_ID,
       secretAccessKey: config.AWS.SECRET_ACCESS_KEY,
     },
+    endpoint: AWS_S3_ENDPOINT_URL,
+    forcePathStyle: !!AWS_S3_ENDPOINT_URL,
     region: config.AWS.REGION,
   });
 
@@ -129,20 +131,32 @@ export class StorageService {
 
   // Download
 
-  download(fileKey: string): string {
-    const dateLessThan = addDays(new Date(), 7).toISOString().split('T')[0];
-    const url = `${config.STORAGE.CLOUDFRONT_BUCKET_MEDIA_DISTRIBUTION_DOMAIN}/${fileKey}`;
-    const privateKey = Buffer.from(
-      config.STORAGE.CLOUDFRONT_BUCKET_MEDIA_PRIVATE_KEY,
-      'base64',
-    ).toString('ascii');
+  // async download(fileKey: string): Promise<string> {
+  //   const dateLessThan = addDays(new Date(), 7).toISOString().split('T')[0];
+  //   const url = `${config.STORAGE.CLOUDFRONT_BUCKET_MEDIA_DISTRIBUTION_DOMAIN}/${fileKey}`;
+  //   const privateKey = Buffer.from(
+  //     config.STORAGE.CLOUDFRONT_BUCKET_MEDIA_PRIVATE_KEY,
+  //     'base64',
+  //   ).toString('ascii');
 
-    const signedUrl = getCloudfrontSignedUrl({
-      dateLessThan,
-      keyPairId: config.STORAGE.CLOUDFRONT_BUCKET_MEDIA_KEY_PAIR_ID,
-      privateKey,
-      url,
-    });
+  //   const signedUrl = getCloudfrontSignedUrl({
+  //     dateLessThan,
+  //     keyPairId: config.STORAGE.CLOUDFRONT_BUCKET_MEDIA_KEY_PAIR_ID,
+  //     privateKey,
+  //     url,
+  //   });
+
+  //   return signedUrl;
+  // }
+
+  async download(fileKey: string): Promise<string> {
+    const signedUrl = await getS3SignedUrl(
+      this.s3Client,
+      new GetObjectCommand({
+        Bucket: config.STORAGE.S3_BUCKET_MEDIA,
+        Key: fileKey,
+      }),
+    );
 
     return signedUrl;
   }

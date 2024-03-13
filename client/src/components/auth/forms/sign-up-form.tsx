@@ -5,7 +5,6 @@ import { AxiosError } from 'axios';
 import { useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 
-import { type SignUp, signUpSchema } from '@/common/schemas/auth/sign-up';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -17,14 +16,15 @@ import {
 } from '@/components/ui/form';
 import { Icons } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
-import { useSignUp } from '@/hooks/auth';
+import { useSignUpMutation } from '@/hooks/auth/use-sign-up-mutation';
+import { type SignUp, signUpSchema } from '@/schemas/auth/sign-up';
 
 import { useAuthFormsContext } from '../auth-forms-provider';
 
 export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const { setCurrentForm } = useAuthFormsContext();
-  const { signUp } = useSignUp();
+  const { mutateAsync } = useSignUpMutation();
 
   const form = useForm<SignUp>({
     defaultValues: {
@@ -39,7 +39,7 @@ export function SignUpForm() {
 
   const onSubmit: SubmitHandler<SignUp> = async (data) => {
     try {
-      await signUp(data);
+      await mutateAsync(data);
     } catch (err) {
       if (err instanceof AxiosError) {
         const errors = err.response?.data?.errors;

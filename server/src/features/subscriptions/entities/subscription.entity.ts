@@ -26,3 +26,10 @@ SubscriptionSchema.index(
   },
   { unique: true },
 );
+
+export interface Subs {
+  userId: string;
+  targetUserId: string;
+  startDate: string;
+  endDate: string;
+}

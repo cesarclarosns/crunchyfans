@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { type UserStatus } from '@/common/constants/users';
 import { useUsersStatus } from '@/hooks/users/use-users-status';
 import { cn } from '@/libs/utils';
-import { type User } from '@/models/users/user';
+import { type User } from '@/schemas/users/user';
 
 import { type Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { UserAvatar } from './user-avatar';

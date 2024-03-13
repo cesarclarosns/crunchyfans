@@ -1,18 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { SnsModule } from '@/providers/sns/sns.module';
-
-import { TranscodeMediaCompleteConsumer } from './consumers/transcode-media-complete.consumer';
+import { TranscodeCompleteConsumer } from './consumers/transcode-complete.consumer';
 import { Media, MediaSchema } from './entities/media.entity';
 import { MediaController } from './media.controller';
 import { MediaService } from './media.service';
-import { TranscodeMediaSubmitProducer } from './producers/transcode-media-submit.producer';
+import { TranscodeSubmitProducer } from './producers/transcode-submit.producer';
 import { StorageService } from './storage.service';
 
 @Module({
   controllers: [MediaController],
-  exports: [MediaService, StorageService],
+  exports: [MediaService],
   imports: [
     MongooseModule.forFeature([
       {
@@ -20,15 +18,14 @@ import { StorageService } from './storage.service';
         schema: MediaSchema,
       },
     ]),
-    SnsModule,
   ],
   providers: [
     MediaService,
     StorageService,
     // Producers
-    TranscodeMediaSubmitProducer,
+    TranscodeSubmitProducer,
     // Consumers
-    TranscodeMediaCompleteConsumer,
+    TranscodeCompleteConsumer,
   ],
 })
 export class MediaModule {}

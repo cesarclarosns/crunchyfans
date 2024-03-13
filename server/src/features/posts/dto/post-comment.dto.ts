@@ -4,7 +4,7 @@ export class PostCommentDto {
   _id: string;
   content: string;
   createdAt: string;
-  user: UserDto;
 
+  user?: UserDto;
   isLiked?: boolean;
 }

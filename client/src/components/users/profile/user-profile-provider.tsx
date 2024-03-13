@@ -1,7 +1,7 @@
 import React from 'react';
 import { createContext, useContext } from 'react';
 
-import { type UserProfile } from '@/models/users/user';
+import { type UserProfile } from '@/schemas/users/user-profile';
 
 export const UserProfileContext = createContext<{
   userProfile: UserProfile;

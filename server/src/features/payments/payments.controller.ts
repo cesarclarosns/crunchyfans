@@ -4,6 +4,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -14,9 +16,10 @@ import { Request } from 'express';
 import Stripe from 'stripe';
 
 import { config } from '@/config';
-import { stripe } from '@/libs/stripe';
+import { stripe } from '@/features/payments/stripe';
 
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePayoutDto } from './dto/create-payout.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PaymentsService } from './payments.service';
@@ -25,19 +28,8 @@ import { PaymentsService } from './payments.service';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Get('payment-methods')
-  async getPaymentMethods(@Req() req: Request) {
-    const userId = req.user.sub;
-
-    return await this.paymentsService.getPaymentMethods({ userId });
-  }
-
-  @Get('publishable-key')
-  async getPublishableKey() {
-    return { publishableKey: config.APP.STRIPE_PUBLISHABLE_KEY };
-  }
-
   @Post('webhook')
+  @HttpCode(HttpStatus.OK)
   async webhook(@Req() req: Request, @Body() body: any) {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = '';
@@ -47,70 +39,61 @@ export class PaymentsController {
     try {
       event = await stripe.webhooks.constructEventAsync(
         body,
-        sig,
+        sig!,
         endpointSecret,
       );
     } catch (err) {
       throw new BadRequestException(`Webhook Error: ${err.message}`);
     }
 
-    console.log('event', event);
-
-    switch (event.type) {
-      case 'checkout.session.completed':
-        switch (event.data.object.mode) {
-          case 'setup':
-            console.log('setup');
-            break;
-          case 'payment':
-            console.log('payment');
-            break;
-          case 'subscription':
-            console.log('subscription');
-            break;
-        }
-        console.log('checkout.session.completed');
-        break;
-
-      case 'payment_intent.succeeded':
-        break;
-      default:
-        console.log(`Unhandled event type ${event.type}`);
-    }
-
-    return;
+    await this.paymentsService.webhook(event);
   }
 
-  @Post('create-checkout-session/subscription')
-  async createSubscriptionCheckoutSession(@Req() req: Request) {
+  @Post('create-setup-intent')
+  async createSetupIntent(@Req() req: Request) {
     const userId = req.user.sub;
 
-    return await this.paymentsService.createSubscriptionCheckoutSession({
-      subscriptionPlan: {
-        discount: 0.2,
-        duration: 3,
-        price: 5,
-      },
-      targetUserId: userId,
-      userId,
-    });
+    return await this.paymentsService.createSetupIntent({ userId });
   }
 
-  @Post('create-checkout-session/setup')
-  async createSetupCheckoutSession(@Req() req: Request) {
+  @Post('create-account-onboarding-link')
+  async createAccountOnboardingLink(@Req() req: Request) {
     const userId = req.user.sub;
 
-    return await this.paymentsService.createSetupCheckoutSession({ userId });
+    return await this.paymentsService.createAccountOnboardingLink({ userId });
   }
 
-  @Post('create-checkout-session/payment')
-  async createPaymentCheckoutSession(@Req() req: Request) {
+  @Post('create-payout')
+  async createPayout(
+    @Req() req: Request,
+    @Body() createPayoutDto: CreatePayoutDto,
+  ) {
     const userId = req.user.sub;
+
+    createPayoutDto.userId = userId;
+
+    return await this.paymentsService.createPayout(createPayoutDto);
   }
 
-  @Post('create-payment-intent/payment')
-  async createSubscriptionPaymentIntent(@Req() req: Request) {
+  @Get('list-payment-methods')
+  async listPaymentMethods(@Req() req: Request) {
     const userId = req.user.sub;
+
+    return await this.paymentsService.listPaymentMethods({ userId });
+  }
+
+  @Get('list-external-accounts')
+  async listExternalAccounts(@Req() req: Request) {
+    const userId = req.user.sub;
+
+    return await this.paymentsService.listExternalAccounts({ userId });
+  }
+
+  @Get('retrieve-balance')
+  async retrieveBalance(@Req() req: Request) {
+    const userId = req.user.sub;
+
+    return await this.paymentsService.retrieveBalance({ userId });
   }
 
   @Post()

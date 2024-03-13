@@ -1,0 +1,11 @@
+<CORSConfiguration>
+    <CORSRule>
+        <AllowedHeader>*</AllowedHeader>
+        <AllowedOrigin>*</AllowedOrigin>
+        <AllowedMethod>GET</AllowedMethod>
+        <AllowedMethod>HEAD</AllowedMethod>
+        <AllowedMethod>POST</AllowedMethod>
+        <AllowedMethod>PUT</AllowedMethod>
+        <ExposeHeader>ETag</ExposeHeader>
+    </CORSRule>
+</CORSConfiguration>

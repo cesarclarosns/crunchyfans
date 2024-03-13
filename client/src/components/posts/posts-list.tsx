@@ -29,7 +29,7 @@ export function PostsList({ userId }: PostsListProps) {
   return (
     <div className="flex flex-1 flex-col">
       {posts.map((post) => (
-        <Post post={post} key={post._id} className="border-b-2 px-5 py-10" />
+        <Post post={post} key={post._id} className="border-b-2 py-10" />
       ))}
 
       <div ref={inViewRef} className="flex flex-col items-center py-5">

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type Post } from '@/models/post/post';
+import { type Post } from '@/schemas/posts/post';
 
 import { postsKeys } from './posts-keys';
 import { type InfiniteDataFeed } from './use-get-feed-query';
@@ -62,17 +62,23 @@ export function useDeletePostLikeMutation() {
 
       queryClient.setQueryData(
         postsKeys.detail(variables.postId),
-        (data: Post) => {
-          // console.log('setQueryData', postsKeys.detail(variables.postId), data);
-          if (!data) return data;
-          data.metadata.likesCount--;
-          data.isLiked = false;
+        (data: Post): Post => {
+          if (data) {
+            return {
+              ...data,
+              isLiked: false,
+              metadata: {
+                ...data.metadata,
+                likesCount: data.metadata.likesCount - 1,
+              },
+            };
+          }
           return data;
         },
       );
     },
     onSettled: (data, error, variables, context) => {
-      console.log('onSettled', { context, data, error, variables });
+      // console.log('onSettled', { context, data, error, variables });
       if (error) {
         queryClient.setQueriesData(
           { queryKey: postsKeys.infinitePosts() },
@@ -116,15 +122,17 @@ export function useDeletePostLikeMutation() {
 
         queryClient.setQueryData(
           postsKeys.detail(variables.postId),
-          (data: Post) => {
-            // console.log(
-            //   'setQueryData',
-            //   postsKeys.detail(variables.postId),
-            //   data,
-            // );
-            if (!data) return data;
-            data.metadata.likesCount++;
-            data.isLiked = true;
+          (data: Post): Post => {
+            if (data) {
+              return {
+                ...data,
+                isLiked: true,
+                metadata: {
+                  ...data.metadata,
+                  likesCount: data.metadata.likesCount + 1,
+                },
+              };
+            }
             return data;
           },
         );

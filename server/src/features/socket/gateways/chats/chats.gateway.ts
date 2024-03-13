@@ -15,7 +15,8 @@ import {
   EventPayload,
 } from '@/common/interfaces/socket';
 import { ChatsService } from '@/features/chats/chats.service';
-import { ChatMessageCreatedEvent, CHATS_EVENTS } from '@/features/chats/events';
+import { CHATS_EVENTS, MessageCreatedEvent } from '@/features/chats/events';
+import { MessageReadEvent } from '@/features/chats/events/message-read.event';
 
 @WebSocketGateway()
 export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -33,7 +34,6 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket: CustomSocket,
     payload: EventPayload<ClientToServerEvents['chats/join-chat']>,
   ): Promise<CallbackResponse<ClientToServerEvents['chats/join-chat']>> {
-    const userId = socket.data.sub;
     const chatId = payload.chatId;
 
     socket.join(`chats:${chatId}`);
@@ -56,23 +56,29 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { message: [], payload: null, status: 'success' };
   }
 
-  @OnEvent(CHATS_EVENTS.ChatMessageCreated)
-  async handleChatMessageCreatedEvent(payload: ChatMessageCreatedEvent) {
-    const { chatId, messageId } = payload;
-
+  @OnEvent(CHATS_EVENTS.MessageCreated)
+  async handleChatMessageCreatedEvent(payload: MessageCreatedEvent) {
     const [chat, message] = await Promise.all([
-      this.chatsService.findOneById(chatId),
-      this.chatsService.findOneMessageById(messageId),
+      this.chatsService.findOneById(payload.chatId),
+      this.chatsService.findOneMessageById(payload.messageId),
     ]);
 
-    this.server
-      .to(`chats:${chatId}`)
-      .emit('chats/new-message', { chatId, message });
+    if (chat && message) {
+      chat.lastMessage = message;
 
-    chat.message = message;
+      this.server
+        .to(chat.participants.map((user) => `users:${user._id}`))
+        .emit('chats/new-message', { chat, message });
+    }
+  }
+
+  @OnEvent(CHATS_EVENTS.MessageRead)
+  async handleChatMessageReadEvent(payload: MessageReadEvent) {
+    const chat = await this.chatsService.findOneById(payload.chatId);
+    if (!chat) return;
 
     this.server
       .to(chat.participants.map((user) => `users:${user._id}`))
-      .emit('chats/new-chat', { chat, chatId: chat._id });
+      .emit('chats/message-read', payload);
   }
 }

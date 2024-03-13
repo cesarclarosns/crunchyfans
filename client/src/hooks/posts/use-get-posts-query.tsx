@@ -1,7 +1,8 @@
 import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 
 import { api } from '@/libs/apis';
-import { type Post } from '@/models/post/post';
+import { type Post, postSchema } from '@/schemas/posts/post';
 
 import { postsKeys } from './posts-keys';
 
@@ -42,7 +43,9 @@ export function useGetPostsQuery(param: UseGetPostsQueryParams) {
       urlSearchParams.set('user', param.userId);
 
       const response = await api.get('posts?' + urlSearchParams.toString());
-      return response.data;
+
+      const posts = await z.array(postSchema).parseAsync(response.data);
+      return posts;
     },
     queryKey: postsKeys.infinitePostsList(param),
   });

@@ -2,13 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 
-import {
-  type CreatePostComment,
-  createPostCommentSchema,
-} from '@/common/schemas/posts/create-post-comment';
 import { useCreatePostCommentMutation } from '@/hooks/posts/use-create-post-comment-mutation';
 import { useGetPostCommentsQuery } from '@/hooks/posts/use-get-post-comments-query';
 import { cn } from '@/libs/utils';
+import {
+  type CreatePostComment,
+  createPostCommentSchema,
+} from '@/schemas/posts/create-post-comment';
 
 import { Button } from '../ui/button';
 import { EmojiPicker } from '../ui/emoji-picker';

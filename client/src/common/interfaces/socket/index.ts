@@ -1,7 +1,7 @@
-import { type Message } from 'postcss';
 import { type Socket } from 'socket.io-client';
 
-import { type Chat } from '@/models/chats/chat';
+import { type Chat } from '@/schemas/chats/chat';
+import { type Message } from '@/schemas/chats/message';
 
 export type DefaultCallbackResponse<TPayload> =
   | {
@@ -28,14 +28,6 @@ export type ClientToServerEvents = {
     cb: (response: DefaultCallbackResponse<null>) => void,
   ) => void;
 
-  'chats/read-message': (
-    ev: {
-      chatId: string;
-      messageId: string;
-    },
-    cb: (response: DefaultCallbackResponse<null>) => void,
-  ) => void;
-
   'users/get-status': (
     ev: { users: string[] },
     cb: (
@@ -48,13 +40,11 @@ export type ClientToServerEvents = {
 };
 
 export type ServerToClientEvents = {
-  'chats/new-chat': (ev: { chatId: string; chat: Chat }) => void;
-
-  'chats/new-message': (ev: { chatId: string; message: Message }) => void;
+  'chats/new-message': (ev: { chat: Chat; message: Message }) => void;
 
   'chats/user-typing': (ev: { chatId: string; userId: string }) => void;
 
-  'chats/read-message': (ev: {
+  'chats/message-read': (ev: {
     chatId: string;
     messageId: string;
     userId: string;

@@ -9,18 +9,13 @@ import { AuthModule } from './features/auth/auth.module';
 import { ChatsSeeder } from './features/chats/chats.seeder';
 import { Chat, ChatSchema } from './features/chats/entities/chat.entity';
 import {
-  ChatMessage,
-  ChatMessageSchema,
-} from './features/chats/entities/chat-message.entity';
+  LastReadMessagePerUser,
+  LastReadMessagePerUserSchema,
+} from './features/chats/entities/last-read-message-per-user.entity';
 import {
-  LastReadChatMessagePerUser,
-  LastReadChatMessagePerUserSchema,
-} from './features/chats/entities/last-read-chat-message-per-user.entity';
-import {
-  Follower,
-  FollowerSchema,
-} from './features/followers/entities/follower.entity';
-import { FollowersSeeder } from './features/followers/followers.seeder';
+  Message,
+  MessageSchema,
+} from './features/chats/entities/message.entity';
 import { Media, MediaSchema } from './features/media/entities/media.entity';
 import { MediaSeeder } from './features/media/media.seeder';
 import { Post, PostSchema } from './features/posts/entities/post.entity';
@@ -77,12 +72,12 @@ seeder({
       },
 
       {
-        name: ChatMessage.name,
-        schema: ChatMessageSchema,
+        name: Message.name,
+        schema: MessageSchema,
       },
       {
-        name: LastReadChatMessagePerUser.name,
-        schema: LastReadChatMessagePerUserSchema,
+        name: LastReadMessagePerUser.name,
+        schema: LastReadMessagePerUserSchema,
       },
       // Posts
       {
@@ -101,13 +96,8 @@ seeder({
         name: PostCommentLike.name,
         schema: PostCommentLikeSchema,
       },
-      // Followers
-      {
-        name: Follower.name,
-        schema: FollowerSchema,
-      },
     ]),
     AuthModule,
     UsersModule,
   ],
-}).run([MediaSeeder, UsersSeeder, ChatsSeeder, PostsSeeder, FollowersSeeder]);
+}).run([MediaSeeder, UsersSeeder, ChatsSeeder, PostsSeeder]);

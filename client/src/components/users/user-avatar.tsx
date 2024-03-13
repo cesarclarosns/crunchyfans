@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { type User } from '@/models/users/user';
+import { type User } from '@/schemas/users/user';
 
 export interface UserAvatarProps extends React.ComponentProps<typeof Avatar> {
   user: User;

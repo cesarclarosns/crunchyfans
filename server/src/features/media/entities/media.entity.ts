@@ -4,7 +4,6 @@ import mongoose, { Document, FilterQuery } from 'mongoose';
 import { ObjectValues } from '@/common/types/object-values.type';
 
 import {
-  FORMAT_QUALITY,
   MEDIA_TYPE,
   PROCESSING_STATUS,
   TRANSCODING_STATUS,
@@ -17,6 +16,9 @@ import {
 class Thumbnail {
   @Prop({ required: true, type: String })
   fileKey: string;
+
+  @Prop({ required: true, type: String })
+  quality: string;
 }
 
 const ThumbnailSchema = SchemaFactory.createForClass(Thumbnail);
@@ -27,10 +29,13 @@ const ThumbnailSchema = SchemaFactory.createForClass(Thumbnail);
 })
 class Source {
   @Prop({ required: true, type: String })
-  quality: ObjectValues<typeof FORMAT_QUALITY>;
+  fileKey: string;
 
   @Prop({ required: true, type: String })
-  fileKey: string;
+  quality: string;
+
+  @Prop({ type: String })
+  duration: string;
 }
 
 const SourceSchema = SchemaFactory.createForClass(Source);
@@ -107,5 +112,3 @@ MediaSchema.index({
   mediaType: 1,
   userId: 1,
 });
-
-export type TMediaFilterQuery = FilterQuery<Media>;

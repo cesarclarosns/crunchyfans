@@ -9,11 +9,11 @@ import { Factory } from 'nestjs-seeder';
   versionKey: false,
 })
 export class PostCommentLike extends Document {
-  @Factory((faker, ctx) => ctx.userId)
+  @Factory((faker, ctx) => ctx!.userId)
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   userId: mongoose.Types.ObjectId;
 
-  @Factory((faker, ctx) => ctx.postCommentId)
+  @Factory((faker, ctx) => ctx!.postCommentId)
   @Prop({
     required: true,
     type: mongoose.Schema.Types.ObjectId,

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type Media } from '@/models/media/media';
+import { type Media } from '@/schemas/media/media';
 
 export function useCreateMediaMutation() {
   return useMutation({

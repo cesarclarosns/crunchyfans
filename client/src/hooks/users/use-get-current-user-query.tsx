@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type User } from '@/models/users/user';
+import { type User } from '@/schemas/users/user';
+
+import { usersKeys } from './users-keys';
 
 export function useGetCurrentUserQuery() {
   return useQuery({
@@ -10,7 +12,7 @@ export function useGetCurrentUserQuery() {
       const response = await api.get('users/me');
       return response.data;
     },
-    queryKey: ['users', 'me'],
+    queryKey: usersKeys.me(),
     staleTime: Infinity,
   });
 }

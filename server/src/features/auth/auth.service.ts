@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -9,14 +10,15 @@ import { JwtService } from '@nestjs/jwt';
 import argon2 from 'argon2';
 
 import { config } from '@/config';
-import { User } from '@/features/users/entities/user.entity';
 import { UsersService } from '@/features/users/users.service';
 
+import { UserDto } from '../users/dto/user.dto';
 import { TokenPayload } from './auth.types';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResetPasswordCallbackDto } from './dto/reset-password-callback.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { AUTH_EVENTS, ResetPasswordEvent, SignUpEvent } from './events';
 
 @Injectable()
@@ -72,9 +74,10 @@ export class AuthService {
     return await this.getTokens(user._id.toString());
   }
 
-  async signUp(signUpDto: SignUpDto): Promise<User> {
+  async signUp(signUpDto: SignUpDto): Promise<UserDto> {
     const user = await this.usersService.findOne({
-      $or: [{ email: signUpDto.email }, { username: signUpDto.username }],
+      email: signUpDto.email,
+      username: signUpDto.username,
     });
 
     if (user) {
@@ -97,7 +100,12 @@ export class AuthService {
     const hashedPassword = await this.hashData(signUpDto.password);
     signUpDto.password = hashedPassword;
 
-    const userCreated = await this.usersService.create({ ...signUpDto });
+    const userCreated = await this.usersService.create({
+      displayName: signUpDto.displayName,
+      email: signUpDto.email,
+      password: signUpDto.password,
+      username: signUpDto.username,
+    });
 
     // Emit events
     this.eventEmitter.emit(
@@ -138,6 +146,14 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async updatePassword(updatePasswordDto: UpdatePasswordDto) {
+    const hashedPassword = await this.hashData(updatePasswordDto.password);
+
+    await this.usersService.update(updatePasswordDto.userId, {
+      password: hashedPassword,
+    });
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
@@ -185,6 +201,8 @@ export class AuthService {
     }
 
     const user = await this.usersService.findOneById(payload.sub);
+
+    if (!user) throw new BadRequestException('User not found');
 
     const hashedPassword = await this.hashData(
       resetPasswordCallbackDto.password,

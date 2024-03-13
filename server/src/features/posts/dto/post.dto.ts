@@ -1,5 +1,5 @@
 import { MediaDto } from '@/features/media/dto/media.dto';
-import { UserDto } from '@/features/users/dto/user.dto';
+import { UserInfoDto } from '@/features/users/dto/user-info.dto';
 
 export class PostDto {
   _id: string;
@@ -7,7 +7,6 @@ export class PostDto {
   content: string;
   createdAt: string;
 
-  user: UserDto;
-
+  user?: UserInfoDto;
   isLiked?: boolean;
 }

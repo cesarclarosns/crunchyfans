@@ -3,18 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { CreatePostFormDialog } from '@/components/posts/forms/create-post-form-dialog';
-import { DialogTrigger } from '@/components/ui/dialog';
 import { Icons } from '@/components/ui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserAvatar } from '@/components/users/user-avatar';
 import { UserDropdownMenu } from '@/components/users/user-dropdown-menu';
-import { useGetCurrentUserQuery } from '@/hooks/users';
+import { useGetCurrentUserQuery } from '@/hooks/users/use-get-current-user-query';
 import { cn } from '@/libs/utils';
+import { useChatsStore } from '@/stores/chats-store';
+
+import { Badge } from './ui/badge';
 
 export function NavBar() {
   const { data: user } = useGetCurrentUserQuery();
   const pathname = usePathname();
+
+  const { unreadChats } = useChatsStore((state) => state);
 
   return (
     <nav
@@ -25,76 +28,95 @@ export function NavBar() {
       <div className="max-sm:hidden">
         {user ? (
           <UserDropdownMenu
-            triggerChildren={<UserAvatar user={user} className="h-8 w-8" />}
+            triggerChildren={<UserAvatar user={user} className="h-7 w-7" />}
           ></UserDropdownMenu>
         ) : (
-          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-7 w-7 rounded-full" />
         )}
       </div>
 
       <Link
         href={'/'}
         className={cn(
-          'flex items-center gap-2 hover:cursor-pointer hover:text-primary',
+          'flex items-center gap-4 hover:cursor-pointer hover:text-primary',
           pathname != '/' && 'text-muted-foreground',
         )}
       >
-        <Icons.Home className="stroke-2" />
-        <span className="font-semibold max-md:hidden">Home</span>
+        <Icons.Home className="h-7 w-7 stroke-2" />
+        <span className="text-lg font-semibold max-md:hidden">Home</span>
       </Link>
 
-      <CreatePostFormDialog
-        trigger={
-          <DialogTrigger
-            className={cn(
-              'flex items-center gap-2 text-muted-foreground hover:cursor-pointer hover:text-primary',
-            )}
-          >
-            <Icons.PlusSquareIcon className="stroke-2"></Icons.PlusSquareIcon>
-            <span className="font-semibold max-md:hidden">Create</span>
-          </DialogTrigger>
-        }
-      />
-
-      <Link
-        href={'/'}
+      {/* <Link
+        href={'/my/notifications'}
         className={cn(
-          'hidden items-center gap-2 text-muted-foreground hover:cursor-pointer hover:text-primary sm:flex',
+          'flex items-center gap-4 text-muted-foreground hover:cursor-pointer hover:text-primary',
+          !pathname.startsWith('/my/notifications') && 'text-muted-foreground',
         )}
       >
-        <Icons.BellIcon className="stroke-2" />
-        <span className="font-semibold max-md:hidden">Notifications</span>
-      </Link>
+        <Icons.BellIcon className="h-7 w-7 stroke-2" />
+        <span className="text-lg font-semibold max-md:hidden">
+          Notifications
+        </span>
+      </Link> */}
 
       <Link
         href={'/my/messages'}
         className={cn(
-          'items-center gap-2 hover:cursor-pointer hover:text-primary sm:flex',
-          pathname != '/my/messages' && 'text-muted-foreground',
+          'items-center gap-4 hover:cursor-pointer hover:text-primary sm:flex',
+          !pathname.startsWith('/my/messages') && 'text-muted-foreground',
         )}
       >
-        <Icons.MessageCircleIcon className="stroke-2" />
-        <span className="font-semibold max-md:hidden">Messages</span>
+        <div className="relative">
+          <Icons.MessageCircleIcon className="h-7 w-7 stroke-2" />
+          {!!unreadChats && (
+            <Badge className="absolute -right-3 top-0 px-2 py-0">
+              {unreadChats}
+            </Badge>
+          )}
+        </div>
+        <span className="text-lg font-semibold max-md:hidden">Messages</span>
       </Link>
 
       <Link
         href={`/${user?.username}`}
         className={cn(
-          'hidden items-center gap-2 hover:cursor-pointer hover:text-primary sm:flex',
+          'hidden items-center gap-4 hover:cursor-pointer hover:text-primary sm:flex',
           pathname != `/${user?.username}` && 'text-muted-foreground',
         )}
       >
-        <Icons.CircleUserIcon className="stroke-2" />
-        <span className="font-semibold max-md:hidden">Profile</span>
+        <Icons.CircleUserIcon className="h-7 w-7 stroke-2" />
+        <span className="text-lg font-semibold max-md:hidden">Profile</span>
+      </Link>
+
+      <Link
+        href={'/posts/create'}
+        className={cn(
+          'flex items-center gap-4 text-muted-foreground hover:cursor-pointer hover:text-primary',
+          !pathname.startsWith('/posts/create') && 'text-muted-foreground',
+        )}
+      >
+        <Icons.PlusSquareIcon className="h-7 w-7 stroke-2" />
+        <span className="text-lg font-semibold max-md:hidden">Create</span>
+      </Link>
+
+      <Link
+        href={'/my/payments'}
+        className={cn(
+          'hidden items-center gap-4 text-muted-foreground hover:cursor-pointer hover:text-primary sm:flex',
+          !pathname.startsWith('/my/payments') && 'text-muted-foreground',
+        )}
+      >
+        <Icons.CreditCardIcon className="h-7 w-7 stroke-2" />
+        <span className="text-lg font-semibold max-md:hidden">Add card</span>
       </Link>
 
       <div className="sm:hidden">
         {user ? (
           <UserDropdownMenu
-            triggerChildren={<UserAvatar user={user} className="h-8 w-8" />}
+            triggerChildren={<UserAvatar user={user} className="h-7 w-7" />}
           ></UserDropdownMenu>
         ) : (
-          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-7 w-7 rounded-full" />
         )}
       </div>
     </nav>

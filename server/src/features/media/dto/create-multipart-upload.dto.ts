@@ -19,10 +19,10 @@ class Part {
 }
 
 export class CreateMultipartUploadDto {
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => Part)
-  @IsOptional()
   parts?: Part[];
 }

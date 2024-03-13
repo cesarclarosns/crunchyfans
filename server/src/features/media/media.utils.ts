@@ -9,22 +9,23 @@ import {
   VIDEO_FORMAT,
 } from './media.constants';
 
-export function getMediaTypeFromFileName(
-  fileName: string,
+export function getMediaTypeFromFileKey(
+  fileKey: string,
 ): ObjectValues<typeof MEDIA_TYPE> {
-  const fileFormat = getFileFormatFromFileName(fileName) as any;
+  const fileName = getFileNameFromFileKey(fileKey);
+  const fileExtension = fileName.split('.').at(-1) as any;
 
-  if (Object.values(AUDIO_FORMAT).includes(fileFormat)) {
+  if (Object.values(AUDIO_FORMAT).includes(fileExtension)) {
     return 'audio';
-  } else if (Object.values(IMAGE_FORMAT).includes(fileFormat)) {
+  } else if (Object.values(IMAGE_FORMAT).includes(fileExtension)) {
     return 'image';
-  } else if (Object.values(VIDEO_FORMAT).includes(fileFormat)) {
+  } else if (Object.values(VIDEO_FORMAT).includes(fileExtension)) {
     return 'video';
   } else {
     throw new BadRequestException('Invalid mediaType');
   }
 }
 
-export function getFileFormatFromFileName(fileName: string) {
-  return fileName.split('.').at(-1) as any;
+export function getFileNameFromFileKey(fileKey: string) {
+  return fileKey.split('/').at(-1)!;
 }

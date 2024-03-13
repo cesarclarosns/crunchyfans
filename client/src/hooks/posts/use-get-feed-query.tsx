@@ -1,7 +1,8 @@
 import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 
 import { api } from '@/libs/apis';
-import { type Post } from '@/models/post/post';
+import { type Post, postSchema } from '@/schemas/posts/post';
 
 import { postsKeys } from './posts-keys';
 
@@ -38,7 +39,9 @@ export function useGetFeedQuery() {
       const response = await api.get(
         'posts/feed?' + urlSearchParams.toString(),
       );
-      return response.data;
+
+      const posts = z.array(postSchema.passthrough()).parseAsync(response.data);
+      return posts;
     },
     queryKey: postsKeys.infiniteFeed(),
   });

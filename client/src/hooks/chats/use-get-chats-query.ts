@@ -1,35 +1,37 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type Chat } from '@/models/chats/chat';
+import { type Chat } from '@/schemas/chats/chat';
+
+import { chatsKeys } from './chats-keys';
 
 const DEFAULT_LIMIT = 10;
 
-export type GetChatsParams = {
+export type Param = {
   pageParam: { skip: number; cursor: string } | undefined;
 };
 
-export type GetChatsResponse = Chat[];
+export type InfiniteDataChats = InfiniteData<Array<Chat>, Array<Param>>;
 
-export function useGetChatsQuery(params: {
+export type UseGetChatsQueryParams = {
   query: string;
   order: 'recent' | 'old';
-}) {
+};
+
+export function useGetChatsQuery(params: UseGetChatsQueryParams) {
   return useInfiniteQuery({
     getNextPageParam: (lastPage, allPages) => {
       const hasNextPage = lastPage.length === DEFAULT_LIMIT;
       if (!hasNextPage) return undefined;
 
-      const cursor = allPages.at(0)!.at(-1)!.message._id;
+      const cursor = allPages.at(0)!.at(-1)!.lastMessage._id;
       const skip =
         (allPages.length > 1 ? allPages.length - 1 : 0) * DEFAULT_LIMIT;
 
       return { cursor, skip };
     },
     initialPageParam: undefined,
-    queryFn: async ({
-      pageParam,
-    }: GetChatsParams): Promise<GetChatsResponse> => {
+    queryFn: async ({ pageParam }: Param): Promise<Array<Chat>> => {
       const urlSearchParams = new URLSearchParams();
       urlSearchParams.set('limit', String(DEFAULT_LIMIT));
       urlSearchParams.set('skip', String(0));
@@ -44,6 +46,7 @@ export function useGetChatsQuery(params: {
       const response = await api.get(`chats?${urlSearchParams.toString()}`);
       return response.data;
     },
-    queryKey: ['chats', params],
+    queryKey: chatsKeys.infiniteChatsList(params),
+    staleTime: 0,
   });
 }

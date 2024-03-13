@@ -36,30 +36,6 @@ export const FILE_FORMAT = {
   ...VIDEO_FORMAT,
 } as const;
 
-export const AUDIO_FORMAT_QUALITY = {
-  original: 'original',
-} as const;
-
-export const IMAGE_FORMAT_QUALITY = {
-  '150': '128',
-  '32': '32',
-  '512': '512',
-  original: 'original',
-  thumbnail: 'thumbnail',
-} as const;
-
-export const VIDEO_FORMAT_QUALITY = {
-  '240p': '240p',
-  '720p': '720p',
-  original: 'original',
-} as const;
-
-export const FORMAT_QUALITY = {
-  ...AUDIO_FORMAT_QUALITY,
-  ...IMAGE_FORMAT_QUALITY,
-  ...VIDEO_FORMAT_QUALITY,
-} as const;
-
 export const PROCESSING_STATUS = {
   complete: 'complete',
   error: 'error',

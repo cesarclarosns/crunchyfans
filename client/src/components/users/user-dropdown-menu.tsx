@@ -8,34 +8,35 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { signOut } from '@/hooks/auth';
+import { signOut } from '@/hooks/auth/sign-out';
+import { useGetCurrentUserQuery } from '@/hooks/users/use-get-current-user-query';
 
-import { ThemeDropdownMenu } from '../theme-dropdown-menu';
 import { Icons } from '../ui/icons';
-import { UserSettingsSheet } from './settings/user-settings-sheet';
 
 export type UserDropdownMenuProps = {
   triggerChildren: React.ReactNode;
 };
 
 export function UserDropdownMenu({ triggerChildren }: UserDropdownMenuProps) {
-  const { setTheme } = useTheme();
   const router = useRouter();
+  const { setTheme } = useTheme();
+  const { data: user } = useGetCurrentUserQuery();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>{triggerChildren}</DropdownMenuTrigger>
       <DropdownMenuContent onCloseAutoFocus={(ev) => ev.preventDefault()}>
         <DropdownMenuGroup>
-          <DropdownMenuItem className="gap-2">
+          <DropdownMenuItem
+            className="gap-2"
+            onClick={() => router.push(`/${user?.username}`)}
+          >
             <Icons.CircleUserIcon className="h-5 w-5" />
             My profile
           </DropdownMenuItem>
@@ -81,6 +82,29 @@ export function UserDropdownMenu({ triggerChildren }: UserDropdownMenuProps) {
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            className="gap-2"
+            onClick={() => router.push('/my/payments/cards')}
+          >
+            <Icons.CreditCardIcon className="h-5 w-5" />
+            <span>
+              Your cards{' '}
+              <span className="text-muted-foreground">(to subscribe)</span>
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="gap-2"
+            onClick={() => router.push('/my/payments/bank_accounts')}
+          >
+            <Icons.LandmarkIcon className="h-5 w-5" />
+            <span>
+              Your bank accounts{' '}
+              <span className="text-muted-foreground">(to earn)</span>
+            </span>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

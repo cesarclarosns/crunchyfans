@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { type CreateFollower } from '@/common/schemas/followers/create-follower';
 import { api } from '@/libs/apis';
-import { type Follower } from '@/models/followers/follower';
+import { type Follower } from '@/schemas/followers/follower';
 
 export function useCreateFollowerMutation() {
   return useMutation({

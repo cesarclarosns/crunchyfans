@@ -33,25 +33,29 @@ export const PostMetadataSchema = SchemaFactory.createForClass(PostMetadata);
   virtuals: true,
 })
 export class Post extends Document {
-  @Factory((faker, ctx) => ctx._id)
+  @Factory((faker) => {
+    return mongoose.Types.ObjectId.createFromTime(
+      faker!.date.recent({ days: 90 }).getTime() / 1000,
+    );
+  })
   @Prop({
     default: () => new mongoose.Types.ObjectId(),
     type: mongoose.Schema.Types.ObjectId,
   })
   _id: mongoose.Types.ObjectId;
 
-  @Factory((faker, ctx) => ctx.userId)
+  @Factory((faker, ctx) => ctx!.userId)
   @Prop({
     required: true,
     type: mongoose.Schema.Types.ObjectId,
   })
   userId: mongoose.Types.ObjectId;
 
-  @Factory((faker) => faker.word.words({ count: { max: 20, min: 10 } }))
+  @Factory((faker) => faker!.word.words({ count: { max: 20, min: 10 } }))
   @Prop({ type: String })
   content: string;
 
-  @Factory((faker, ctx) => ctx.media ?? [])
+  @Factory((faker, ctx) => ctx!.media ?? [])
   @Prop({
     default: [],
     ref: Media.name,

@@ -1,7 +1,8 @@
-import { ChatMessageCreatedEvent } from './chat-message-created.event';
+import { MessageCreatedEvent } from './message-created.event';
 
 export const CHATS_EVENTS = {
-  ChatMessageCreated: 'Chats.ChatMessageCreated',
+  MessageCreated: 'Chats.MessageCreated',
+  MessageRead: 'Chats.MessageRead',
 };
 
-export { ChatMessageCreatedEvent };
+export { MessageCreatedEvent };

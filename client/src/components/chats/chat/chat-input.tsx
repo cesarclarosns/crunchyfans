@@ -2,46 +2,48 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 
-import {
-  type CreateChatMessage,
-  createChatMessageSchema,
-} from '@/common/schemas/chats/create-chat-message.schema';
 import { MediaUploadsCarousel } from '@/components/media/media-uploads-carousel';
 import { Button } from '@/components/ui/button';
 import { EmojiPicker } from '@/components/ui/emoji-picker';
 import { Icons } from '@/components/ui/icons';
 import { Textarea } from '@/components/ui/textarea';
-import { useCreateChatMessageMutation } from '@/hooks/chats/use-create-chat-message-mutation';
+import { useCreateMessageMutation } from '@/hooks/chats/use-create-message-mutation';
 import { useUploadMedia } from '@/hooks/media';
 import { socket } from '@/libs/socket';
+import {
+  type CreateMessage,
+  createMessageSchema,
+} from '@/schemas/chats/create-message';
 
 import { useChatContext } from './chat-provider';
 
 export interface ChatInputProps {}
 
 export function ChatInput({}: ChatInputProps) {
-  const { chat } = useChatContext();
+  const {
+    state: { chat },
+  } = useChatContext();
 
   const uploadMedia = useUploadMedia();
 
-  const createChatMessageMutation = useCreateChatMessageMutation();
+  const createMessageMutation = useCreateMessageMutation();
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const form = useForm<CreateChatMessage>({
+  const form = useForm<CreateMessage>({
     defaultValues: {
       chatId: chat._id,
       content: '',
       media: [],
     },
     mode: 'all',
-    resolver: zodResolver(createChatMessageSchema),
+    resolver: zodResolver(createMessageSchema),
   });
 
-  const onSubmit: SubmitHandler<CreateChatMessage> = async (data) => {
+  const onSubmit: SubmitHandler<CreateMessage> = async (data) => {
     try {
-      console.log('onSubmut', data);
-      await createChatMessageMutation.mutateAsync({
+      // console.log('onSubmut', data);
+      await createMessageMutation.mutateAsync({
         ...data,
         media: [...uploadMedia.uploads.map((upload) => upload.media!._id)],
       });
@@ -61,19 +63,20 @@ export function ChatInput({}: ChatInputProps) {
 
     emitUserTypingEvRef.current = false;
     socket.emit('chats/user-typing', { chatId: chat._id }, (response) => {
-      console.log('emit chats/user-typing', { response });
+      // console.log('emit chats/user-typing', { response });
     });
     setTimeout(() => (emitUserTypingEvRef.current = true), 500);
   }, [content]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 px-2 py-2">
       <MediaUploadsCarousel {...uploadMedia} />
       <form className="flex gap-2" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="flex flex-1">
           <Textarea
-            className="max-h-[60px] min-h-[60px] resize-none"
+            className="max-h-[40px] min-h-[40px] resize-none border-0 px-0 py-0"
             spellCheck={false}
+            placeholder="Type a message..."
             {...form.register('content')}
           ></Textarea>
         </div>

@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { type CreatePostComment } from '@/common/schemas/posts/create-post-comment';
 import { useGetPostCommentsQuery } from '@/hooks/posts/use-get-post-comments-query';
 import { cn } from '@/libs/utils';
+import { type CreatePostComment } from '@/schemas/posts/create-post-comment';
 
 import { PostComment } from './post-comment';
 

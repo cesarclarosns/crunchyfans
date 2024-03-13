@@ -26,12 +26,6 @@ class Pictures extends Document {
     type: mongoose.Schema.Types.ObjectId,
   })
   profilePicture: mongoose.Types.ObjectId;
-
-  @Prop({
-    ref: Media.name,
-    type: mongoose.Schema.Types.ObjectId,
-  })
-  coverPicture: mongoose.Types.ObjectId;
 }
 
 const PicturesSchema = SchemaFactory.createForClass(Pictures);
@@ -51,12 +45,6 @@ const SettingsSchema = SchemaFactory.createForClass(Settings);
 @Schema({ _id: false, versionKey: false })
 class Metadata extends Document {
   @Prop({ default: 0, required: false, type: Number })
-  followersCount: number;
-
-  @Prop({ default: 0, required: false, type: Number })
-  followeesCount: number;
-
-  @Prop({ default: 0, required: false, type: Number })
   subscribersCount: number;
 }
 
@@ -69,33 +57,35 @@ const MetadataSchema = SchemaFactory.createForClass(Metadata);
   timestamps: true,
 })
 export class User extends Document {
-  @Factory((faker, ctx) => faker.person.fullName({ sex: ctx.gender }))
+  @Factory((faker, ctx) => faker!.person.fullName({ sex: ctx!.gender }))
   @Prop({ required: true, type: String })
   displayName: string;
 
   @Factory((faker, ctx) =>
-    faker.internet.userName({ firstName: ctx.displayName }),
+    faker!.internet.userName({ firstName: ctx!.displayName }),
   )
   @Prop({ required: true, type: String, unique: true })
   username: string;
 
-  @Factory((faker, ctx) => faker.internet.email({ firstName: ctx.displayName }))
+  @Factory((faker, ctx) =>
+    faker!.internet.email({ firstName: ctx!.displayName }),
+  )
   @Prop({ sparse: true, type: String, unique: true })
   email: string;
 
-  @Factory((faker, ctx) => ctx.password)
+  @Factory((faker, ctx) => ctx!.password)
   @Prop({ type: String })
   password: string;
 
-  @Factory((faker) => faker.person.bio())
+  @Factory((faker) => faker!.person.bio())
   @Prop({ type: String })
   bio: string;
 
-  @Factory((faker) => faker.date.recent())
+  @Factory((faker) => faker!.date.recent())
   @Prop({ type: Date })
   lastConnection: string;
 
-  @Factory((faker, ctx) => ctx.pictures)
+  @Factory((faker, ctx) => ctx!.pictures)
   @Prop({ default: {}, required: true, type: PicturesSchema })
   pictures: Pictures;
 

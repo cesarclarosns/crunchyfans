@@ -57,7 +57,7 @@ export class PostsController {
 
     getFeedDto.userId = userId;
 
-    return await this.postsService.getFeed(getFeedDto);
+    // return await this.postsService.getFeed(getFeedDto);
   }
 
   @Get(':postId')

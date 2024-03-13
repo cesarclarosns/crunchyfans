@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 
-export interface ChatsState {
-  chatId: string | null;
-  setChatId: (chatId: string | null) => void;
+interface ChatsState {
+  unreadChats: number;
+  setUnreadChats: (unreadChats: number) => void;
 }
 
 export const useChatsStore = create<ChatsState>()((set) => ({
-  chatId: null,
-  setChatId: (chatId) => set(() => ({ chatId })),
+  setUnreadChats: (unreadChats) => set(() => ({ unreadChats })),
+  unreadChats: 0,
 }));

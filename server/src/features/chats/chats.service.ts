@@ -1,44 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
-import aqp from 'api-query-params';
-import mongoose, { Model, PipelineStage } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 
 import { MediaService } from '../media/media.service';
-import { StorageService } from '../media/storage.service';
 import { UserDto } from '../users/dto/user.dto';
 import { UsersService } from '../users/users.service';
 import { ChatDto } from './dto/chat.dto';
-import { ChatMessageDto } from './dto/chat-message.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
-import { CreateChatMassiveMessageDto } from './dto/create-chat-massive-message.dto';
-import { CreateChatMessageDto } from './dto/create-chat-message.dto';
-import { CreateLastReadChatMessagePerUserDto } from './dto/create-last-read-chat-message-per-user.dto';
-import { FindAllChatMessagesDto } from './dto/find-all-chat-messages.dto';
+import { CreateMassiveMessageDto } from './dto/create-massive-message.dto';
+import { CreateMessageDto } from './dto/create-message.dto';
 import { FindAllChatsDto } from './dto/find-all-chats.dto';
+import { FindAllMessagesDto } from './dto/find-all-messages.dto';
+import { MessageDto } from './dto/message.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { UpdateChatMessageDto } from './dto/update-chat-message.dto';
-import { Chat, TChatFilterQuery } from './entities/chat.entity';
-import {
-  ChatMessage,
-  TChatMessageFilterQuery,
-} from './entities/chat-message.entity';
-import { LastReadChatMessagePerUser } from './entities/last-read-chat-message-per-user.entity';
-import { ChatMessageCreatedEvent, CHATS_EVENTS } from './events';
+import { UpdateMessageDto } from './dto/update-message.dto';
+import { Chat } from './entities/chat.entity';
+import { LastReadMessagePerUser } from './entities/last-read-message-per-user.entity';
+import { Message, MessageFilterQuery } from './entities/message.entity';
+import { CHATS_EVENTS, MessageCreatedEvent } from './events';
+import { MessageReadEvent } from './events/message-read.event';
 
 @Injectable()
 export class ChatsService {
   constructor(
     @InjectModel(Chat.name) private chatModel: Model<Chat>,
-    @InjectModel(ChatMessage.name) private chatMessageModel: Model<ChatMessage>,
-    @InjectModel(LastReadChatMessagePerUser.name)
-    private lastReadChatMessagePerUserModel: Model<LastReadChatMessagePerUser>,
-    private readonly mediaService: MediaService,
-    private readonly usersService: UsersService,
+    @InjectModel(Message.name) private messageModel: Model<Message>,
+    @InjectModel(LastReadMessagePerUser.name)
+    private lastReadMessagePerUserModel: Model<LastReadMessagePerUser>,
     private readonly eventEmitter: EventEmitter2,
+    private readonly mediaService: MediaService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) {}
 
-  async create(createChatDto: CreateChatDto) {
+  async create(createChatDto: CreateChatDto): Promise<ChatDto> {
     return await this.chatModel.findOneAndUpdate(
       {
         participants: {
@@ -67,7 +63,7 @@ export class ChatsService {
     limit,
     order,
     query,
-  }: FindAllChatsDto) {
+  }: FindAllChatsDto): Promise<ChatDto[]> {
     let chats: ChatDto[] = await this.chatModel.aggregate([
       {
         $match: {
@@ -84,6 +80,21 @@ export class ChatsService {
           localField: 'participants',
           pipeline: [
             {
+              $lookup: {
+                as: 'pictures.profilePicture',
+                foreignField: '_id',
+                from: 'media',
+                localField: 'pictures.profilePicture',
+              },
+            },
+            {
+              $set: {
+                'pictures.profilePicture': {
+                  $first: '$pictures.profilePicture',
+                },
+              },
+            },
+            {
               $project: {
                 metadata: 0,
                 oauth: 0,
@@ -96,27 +107,39 @@ export class ChatsService {
       },
       {
         $lookup: {
-          as: 'message',
+          as: 'lastMessage',
           foreignField: 'chatId',
-          from: 'chatMessages',
+          from: 'messages',
           localField: '_id',
           pipeline: [
+            {
+              $sort: { _id: -1 },
+            },
+            {
+              $limit: 1,
+            },
+            {
+              $lookup: {
+                as: 'seenBy',
+                foreignField: 'messageId',
+                from: 'lastReadMessagePerUser',
+                localField: '_id',
+              },
+            },
             {
               $set: {
                 createdAt: {
                   $toDate: '$_id',
                 },
+                seenBy: '$seenBy.userId',
               },
-            },
-            {
-              $sort: { _id: order === 'recent' ? -1 : 1 },
             },
           ],
         },
       },
       {
         $set: {
-          message: { $first: '$message' },
+          lastMessage: { $first: '$lastMessage' },
         },
       },
       {
@@ -152,7 +175,7 @@ export class ChatsService {
         },
       },
       {
-        $sort: { 'message._id': order === 'recent' ? -1 : 1 },
+        $sort: { 'lastMessage._id': order === 'recent' ? -1 : 1 },
       },
       {
         $skip: +skip,
@@ -160,91 +183,33 @@ export class ChatsService {
       {
         $limit: +limit,
       },
-      {
-        $lookup: {
-          as: 'message.isSeen',
-          foreignField: 'chatId',
-          from: 'lastReadChatMessagePerUser',
-          localField: '_id',
-          pipeline: [
-            {
-              $set: {
-                messageCreatedAt: {
-                  $toDate: '$messageId',
-                },
-              },
-            },
-            {
-              $match: {
-                userId: new mongoose.Types.ObjectId(userId),
-              },
-            },
-            {
-              $sort: {
-                messageId: -1,
-              },
-            },
-            {
-              $limit: 1,
-            },
-          ],
-        },
-      },
-      {
-        $set: {
-          'message.isSeen': {
-            $cond: {
-              else: false,
-              if: {
-                $gte: [
-                  {
-                    $getField: {
-                      field: 'messageId',
-                      input: {
-                        $first: '$message.isSeen',
-                      },
-                    },
-                  },
-                  '$message._id',
-                ],
-              },
-              then: true,
-            },
-          },
-        },
-      },
     ]);
 
     chats = JSON.parse(JSON.stringify(chats));
 
     for (const chat of chats) {
       for (const participant of chat.participants) {
-        this.usersService.downloadPictures(participant);
+        this.usersService.downloadPictures(participant.pictures);
       }
     }
 
     return chats;
   }
 
-  async findOneById(chatId: string) {
-    const chat: ChatDto = (
-      await this.chatModel.findById(chatId).populate([
-        {
-          path: 'participants',
-          populate: [
-            { path: 'pictures.profilePicture' },
-            { path: 'pictures.coverPicture' },
-          ],
-          select: '-password -oauth -settings -metadata',
-        },
-      ])
-    )?.toJSON();
+  async findOneById(chatId: string): Promise<ChatDto | null> {
+    const _chat = await this.chatModel.findById(chatId).populate([
+      {
+        path: 'participants',
+        populate: [{ path: 'pictures.profilePicture' }],
+        select: '_id email username displayName bio lastConnection pictures',
+      },
+    ]);
+
+    const chat = JSON.parse(JSON.stringify(_chat));
 
     if (chat) {
       for (const participant of chat.participants) {
-        this.usersService.downloadPictures(
-          participant as unknown as UserDto,
-        );
+        this.usersService.downloadPictures(participant.pictures);
       }
     }
 
@@ -259,19 +224,86 @@ export class ChatsService {
     return await this.chatModel.deleteOne({ _id: chatId });
   }
 
-  async createMessage(createChatMessageDto: CreateChatMessageDto) {
-    const message = await this.chatMessageModel.create(createChatMessageDto);
+  async getUnreadChats(userId: string): Promise<{ count: number }> {
+    const results = await this.chatModel.aggregate([
+      {
+        $match: {
+          participants: {
+            $in: [new mongoose.Types.ObjectId(userId)],
+          },
+        },
+      },
+      {
+        $lookup: {
+          as: 'lastMessage',
+          foreignField: 'chatId',
+          from: 'messages',
+          localField: '_id',
+          pipeline: [
+            {
+              $sort: { _id: -1 },
+            },
+            {
+              $limit: 1,
+            },
+            {
+              $lookup: {
+                as: 'seenBy',
+                foreignField: 'messageId',
+                from: 'lastReadMessagePerUser',
+                localField: '_id',
+              },
+            },
+            {
+              $set: {
+                seenBy: '$seenBy.userId',
+              },
+            },
+          ],
+        },
+      },
+      {
+        $set: {
+          message: { $first: '$lastMessage' },
+        },
+      },
+      {
+        $match: {
+          $and: [
+            {
+              'lastMessage.userId': {
+                $ne: new mongoose.Types.ObjectId(userId),
+              },
+            },
+            {
+              'lastMessage.seenBy': {
+                $nin: [new mongoose.Types.ObjectId(userId)],
+              },
+            },
+          ],
+        },
+      },
+      {
+        $count: 'count',
+      },
+    ]);
+
+    return results.at(0);
+  }
+
+  async createMessage(createMessageDto: CreateMessageDto): Promise<MessageDto> {
+    const messageCreated = await this.messageModel.create(createMessageDto);
 
     // Emit events
     this.eventEmitter.emit(
-      CHATS_EVENTS.ChatMessageCreated,
-      new ChatMessageCreatedEvent({
-        chatId: createChatMessageDto.chatId,
-        messageId: message._id.toString(),
+      CHATS_EVENTS.MessageCreated,
+      new MessageCreatedEvent({
+        chatId: createMessageDto.chatId,
+        messageId: messageCreated._id.toString(),
       }),
     );
 
-    return message;
+    return messageCreated.toJSON();
   }
 
   async findAllMessages({
@@ -279,47 +311,60 @@ export class ChatsService {
     limit,
     cursor,
     chatId,
-    order,
-  }: FindAllChatMessagesDto) {
-    let messages: ChatMessageDto[] = await this.chatMessageModel
-      .find(
-        {
-          chatId,
-          ...(cursor
+  }: FindAllMessagesDto): Promise<MessageDto[]> {
+    let aggregate = await this.messageModel.aggregate([
+      {
+        $match: {
+          chatId: new mongoose.Types.ObjectId(chatId),
+          ...(!!cursor
             ? {
-                _id: {
-                  ...(order === 'recent'
-                    ? {
-                        $lt: cursor,
-                      }
-                    : {
-                        $gt: cursor,
-                      }),
+                cursor: {
+                  $lt: new mongoose.Types.ObjectId(cursor),
                 },
               }
             : {}),
         },
-        {},
-        {
-          limit: +limit,
-          skip: +skip,
-          sort: {
-            _id: order === 'recent' ? -1 : 1,
-          },
+      },
+      {
+        $sort: { _id: -1 },
+      },
+      {
+        $skip: +skip,
+      },
+      {
+        $limit: +limit,
+      },
+      {
+        $lookup: {
+          as: 'seenBy',
+          foreignField: 'messageId',
+          from: 'lastReadMessagePerUser',
+          localField: '_id',
         },
-      )
-      .populate([
-        { path: 'user', select: '-password -oauth -settings -metadata' },
-        { path: 'media' },
-      ]);
+      },
+      {
+        $set: {
+          createdAt: {
+            $toDate: '$_id',
+          },
+          seenBy: '$seenBy.userId',
+        },
+      },
+    ]);
 
-    messages = JSON.parse(JSON.stringify(messages));
+    aggregate = await this.messageModel.populate(aggregate, [
+      {
+        path: 'user',
+        select: '-password -oauth -settings',
+      },
+      {
+        path: 'media',
+      },
+    ]);
+
+    const messages = JSON.parse(JSON.stringify(aggregate));
 
     for (const message of messages) {
-      message.createdAt = new mongoose.Types.ObjectId(message._id)
-        .getTimestamp()
-        .toISOString();
-
       for (const media of message.media) {
         this.mediaService.downloadMedia(media);
       }
@@ -328,59 +373,92 @@ export class ChatsService {
     return messages;
   }
 
-  async findOneMessage(filter: TChatMessageFilterQuery) {
-    return await this.chatMessageModel
-      .findOne(filter)
-      .populate([
-        { path: 'user', select: '-password -oauth -settings -metadata' },
-      ]);
-  }
+  async findOneMessageById(messageId: string): Promise<MessageDto> {
+    let aggregate = await this.messageModel.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(messageId),
+        },
+      },
+      {
+        $lookup: {
+          as: 'seenBy',
+          foreignField: 'messageId',
+          from: 'lastReadMessagePerUser',
+          localField: '_id',
+        },
+      },
+      {
+        $set: {
+          createdAt: {
+            $toDate: '$_id',
+          },
+          seenBy: '$seenBy.userId',
+        },
+      },
+    ]);
 
-  async findOneMessageById(messageId: string) {
-    const message: ChatMessageDto = (
-      await this.chatMessageModel
-        .findById(messageId)
-        .populate([
-          { path: 'user', select: '-password -oauth -settings -metadata' },
-        ])
-    ).toJSON();
+    aggregate = await this.messageModel.populate(aggregate, [
+      {
+        path: 'user',
+        select: '-password -oauth -settings',
+      },
+      {
+        path: 'media',
+      },
+    ]);
 
-    if (message) {
-      message.createdAt = new mongoose.Types.ObjectId(message._id)
-        .getTimestamp()
-        .toISOString();
+    const messages = JSON.parse(JSON.stringify(aggregate));
+
+    for (const message of messages) {
+      for (const media of message.media) {
+        this.mediaService.downloadMedia(media);
+      }
     }
 
-    return message;
+    return messages.at(0);
   }
 
   async updateMessage(
-    filter: TChatMessageFilterQuery,
-    updateChatMessageDto: UpdateChatMessageDto,
+    filter: MessageFilterQuery,
+    updateMessageDto: UpdateMessageDto,
   ) {
-    return await this.chatMessageModel.updateOne(
+    return await this.messageModel.updateOne(
       { _id: filter.messageId, userId: filter.messageId },
-      updateChatMessageDto,
+      updateMessageDto,
     );
   }
 
-  async deleteMessage(filter: TChatMessageFilterQuery) {
-    return await this.chatMessageModel.deleteOne(filter);
+  async deleteMessage(filter: MessageFilterQuery) {
+    return await this.messageModel.deleteOne(filter);
   }
 
-  async createMassiveMessage(
-    createChatMassiveMessageDto: CreateChatMassiveMessageDto,
-  ) {
-    console.log({ createChatMassiveMessageDto });
-  }
-
-  async createLastReadMessagePerUser(
-    createLastReadMessagePerUserDto: CreateLastReadChatMessagePerUserDto,
-  ) {
-    return await this.lastReadChatMessagePerUserModel.findOneAndUpdate(
-      createLastReadMessagePerUserDto,
+  async readMessage({
+    messageId,
+    userId,
+    chatId,
+  }: {
+    userId: string;
+    messageId: string;
+    chatId: string;
+  }) {
+    await this.lastReadMessagePerUserModel.updateOne(
+      {
+        chatId,
+        messageId,
+        userId,
+      },
       {},
-      { new: true, upsert: true },
+      { upsert: true },
     );
+
+    this.eventEmitter.emit(
+      CHATS_EVENTS.MessageRead,
+      new MessageReadEvent({ chatId, messageId, userId }),
+    );
+  }
+
+  async createMassiveMessage(createMassiveMessageDto: CreateMassiveMessageDto) {
+    console.log({ createMassiveMessageDto });
   }
 }

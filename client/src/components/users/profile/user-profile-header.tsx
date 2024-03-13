@@ -1,20 +1,14 @@
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/ui/icons';
+import { useToast } from '@/components/ui/use-toast';
+import { env } from '@/env';
 import { useCreateChatMutation } from '@/hooks/chats/use-create-chat-mutation';
-import { useGetCurrentUserQuery } from '@/hooks/users';
+import { useGetCurrentUserQuery } from '@/hooks/users/use-get-current-user-query';
 import { useUsersStatus } from '@/hooks/users/use-users-status';
 import { useAuthStore } from '@/stores/auth-store';
-import { useChatsStore } from '@/stores/chats-store';
 
 import { UserAvatar } from '../user-avatar';
 import { useUserProfileContext } from './user-profile-provider';
@@ -40,12 +34,38 @@ export function UserProfileHeader() {
 }
 
 export function Description() {
+  const router = useRouter();
+  const { toast } = useToast();
+
   const { userProfile } = useUserProfileContext();
+
   const { usersStatus } = useUsersStatus([userProfile._id]);
+  const { data: currentUser } = useGetCurrentUserQuery();
+
+  const createChatMutation = useCreateChatMutation();
+  const handleSendMessage = async () => {
+    try {
+      const chat = await createChatMutation.mutateAsync({
+        participants: [currentUser!._id, userProfile._id],
+      });
+      router.push(`/my/messages/${chat._id}`);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleCopyLinkToProfile = useCallback(() => {
+    const link = `${window.location.origin}/${userProfile.username}`;
+    navigator.clipboard.writeText(link);
+
+    toast({
+      title: 'Link to profile was copied to clipboard!',
+    });
+  }, [userProfile]);
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col">
+      <div className="flex items-end justify-between">
         <div className="relative w-fit">
           <UserAvatar
             user={userProfile}
@@ -66,6 +86,17 @@ export function Description() {
             </span>
           </div>
         </div>
+
+        <div className="flex gap-2">
+          <Icons.MessageCircleIcon
+            className="h-6 w-6 hover:cursor-pointer"
+            onClick={handleSendMessage}
+          />
+          <Icons.ExternalLinkIcon
+            className="h-6 w-6 hover:cursor-pointer"
+            onClick={handleCopyLinkToProfile}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-5">
@@ -81,21 +112,6 @@ export function Description() {
               <span className="pl-2">Available now</span>
             )}
           </p>
-
-          <p className="pt-2 text-sm text-muted-foreground">
-            <span>
-              {userProfile.metadata?.followersCount ?? '0'}{' '}
-              {userProfile.metadata?.followersCount === 1
-                ? 'Follower'
-                : 'Followers'}
-            </span>
-            <span className="pl-2">
-              {userProfile.metadata?.followeesCount ?? '0'}{' '}
-              {userProfile.metadata?.followeesCount === 1
-                ? 'Followee'
-                : 'Followees'}
-            </span>
-          </p>
         </div>
       </div>
     </div>
@@ -104,14 +120,31 @@ export function Description() {
 
 export function PublicDescription() {
   const { userProfile } = useUserProfileContext();
+  const { toast } = useToast();
+
+  const handleCopyLinkToProfile = useCallback(() => {
+    const link = `${window.location.hostname}/${userProfile.username}`;
+    navigator.clipboard.writeText(link);
+
+    toast({
+      title: 'Link to profile was copied to clipboard!',
+    });
+  }, [userProfile]);
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col">
+      <div className="flex items-end justify-between">
         <div className="relative w-fit">
           <UserAvatar
             user={userProfile}
             className="h-24 w-24 text-2xl sm:h-24 sm:w-24"
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Icons.ExternalLinkIcon
+            className="h-5 w-5 hover:cursor-pointer"
+            onClick={handleCopyLinkToProfile}
           />
         </div>
       </div>
@@ -122,21 +155,6 @@ export function PublicDescription() {
             {userProfile.displayName}
             <Icons.BadgeCheckIcon className="h-5 w-5"></Icons.BadgeCheckIcon>
           </div>
-
-          <p className="pt-2 text-sm text-muted-foreground">
-            <span>
-              {userProfile.metadata?.followersCount ?? '0'}{' '}
-              {userProfile.metadata?.followersCount === 1
-                ? 'Follower'
-                : 'Followers'}
-            </span>
-            <span className="pl-2">
-              {userProfile.metadata?.followeesCount ?? '0'}{' '}
-              {userProfile.metadata?.followeesCount === 1
-                ? 'Followee'
-                : 'Followees'}
-            </span>
-          </p>
         </div>
       </div>
     </div>
@@ -149,14 +167,12 @@ export function Actions() {
 
   const { userProfile } = useUserProfileContext();
 
-  const { setChatId } = useChatsStore((state) => state);
   const createChatMutation = useCreateChatMutation();
   const handleSendMessage = async () => {
     try {
       const chat = await createChatMutation.mutateAsync({
         participants: [currentUser!._id, userProfile._id],
       });
-      setChatId(chat._id);
       router.push('/my/messages');
     } catch (err) {
       console.log(err);
@@ -176,16 +192,7 @@ export function Actions() {
         </div>
       ) : (
         <div className="flex justify-end gap-2">
-          <Button className="h-fit flex-1">
-            {userProfile.isFollowing ? 'Following' : 'Follow'}
-          </Button>
-          <Button
-            variant={'secondary'}
-            className="h-fit flex-1"
-            onClick={handleSendMessage}
-          >
-            Message
-          </Button>
+          <Icons.MessageCircleIcon />
         </div>
       )}
     </>
@@ -195,10 +202,7 @@ export function Actions() {
 export function PublicActions() {
   return (
     <div className="flex gap-2">
-      <Button className="h-fit flex-1">Follow</Button>
-      <Button variant={'secondary'} className="h-fit flex-1">
-        Message
-      </Button>
+      <Icons.MessageCircleIcon />
     </div>
   );
 }

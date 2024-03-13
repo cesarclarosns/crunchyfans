@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type User } from '@/models/users/user';
+import { type User } from '@/schemas/users/user';
 
 export function useGetUsersQuery(data: {
   skip: number;

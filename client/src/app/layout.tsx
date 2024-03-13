@@ -4,8 +4,8 @@ import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
 
 import { AppLayout } from '@/components/app-layout';
-import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
+import { Providers } from '@/providers';
 
 export const metadata = {
   description: 'CrunchyFans',
@@ -22,7 +22,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning={true}
-      className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body suppressHydrationWarning={true}>
         <Providers>

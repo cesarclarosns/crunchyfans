@@ -19,6 +19,10 @@ export class NotificationsService {
 
   remove(id: string) {}
 
+  async getUnreadNotifications(userId: string): Promise<{ count: number }> {
+    return { count: 0 };
+  }
+
   @OnEvent(NOTIFICATIONS_EVENTS.notificationCreated)
   handleNotificationsNotificationCreatedEvent(
     payload: NotificationCreatedEvent,

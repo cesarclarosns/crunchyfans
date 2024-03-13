@@ -8,15 +8,15 @@ import mongoose from 'mongoose';
 import { Logger } from 'nestjs-pino';
 
 import { CorsError } from '@/common/errors/cors.error';
+import { RedisIoAdapter } from '@/common/libs/adapters/reids-io.adapter';
+import { CorsExceptionFilter } from '@/common/libs/filters/cors-exception.filter';
+import { MongooseExceptionFilter } from '@/common/libs/filters/mongoose-exception.filter';
 import { AUTH_COOKIES, AUTH_TOKENS } from '@/features/auth/auth.constants';
-import { RedisIoAdapter } from '@/libs/adapters/reids-io.adapter';
-import { CorsExceptionFilter } from '@/libs/filters/cors-exception.filter';
-import { MongooseExceptionFilter } from '@/libs/filters/mongoose-exception.filter';
 
 import { AppModule } from './app.module';
 import { config } from './config';
 
-mongoose.set('debug', true);
+// mongoose.set('debug', true);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

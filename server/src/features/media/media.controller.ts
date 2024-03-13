@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,16 +11,13 @@ import {
 import { Request } from 'express';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { CreateMediaDto } from './dto/create-media.dto';
 import { CreateMediaParamsDto } from './dto/create-media-params.dto';
-import { CreateMediaQueryDto } from './dto/create-media-query.dto';
 import { CreateMultipartUploadDto } from './dto/create-multipart-upload.dto';
 import { CreateMultipartUploadQueryDto } from './dto/create-multipart-upload-query.dto';
 import { CreateUploadQueryDto } from './dto/create-upload-query.dto';
 import { DeleteMultipartUploadDto } from './dto/delete-multipart-upload.dto';
 import { FindAllMediaDto } from './dto/find-all-media.dto';
 import { MediaService } from './media.service';
-import { StorageService } from './storage.service';
 
 @Controller('media')
 export class MediaController {

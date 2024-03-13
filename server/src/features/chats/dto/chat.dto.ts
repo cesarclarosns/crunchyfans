@@ -1,9 +1,9 @@
-import { UserDto } from '@/features/users/dto/user.dto';
+import { UserInfoDto } from '@/features/users/dto/user-info.dto';
 
-import { ChatMessageDto } from './chat-message.dto';
+import { MessageDto } from './message.dto';
 
 export class ChatDto {
   _id: string;
-  participants: UserDto[];
-  message: ChatMessageDto;
+  participants: UserInfoDto[];
+  lastMessage?: MessageDto;
 }

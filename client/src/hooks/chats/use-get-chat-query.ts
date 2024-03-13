@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type Chat } from '@/models/chats/chat';
+import { type Chat } from '@/schemas/chats/chat';
 
 export function useGetChatQuery(chatId: string | null) {
   return useQuery({

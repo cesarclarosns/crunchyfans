@@ -1,0 +1,105 @@
+org: cesarclarosns
+app: crunchyfans
+service: media-resources
+
+frameworkVersion: "3"
+
+plugins:
+  - serverless-s3-local
+  - serverless-offline-sqs
+  - serverless-offline
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs20.x
+
+custom:
+  serverless-offline:
+    printOutput: true
+
+  s3:
+    port: 4569
+    directory: /tmp
+    cors: ./s3-cors.xml
+    allowMismatchedSignatures: true
+    silent: true
+
+  serverless-offline-sqs:
+    autoCreate: true
+    apiVersion: "2012-11-05"
+    endpoint: http://0.0.0.0:9324
+    region: us-east-1
+    accessKeyId: root
+    secretAccessKey: root
+    skipCacheInvalidation: false
+
+resources:
+  Resources:
+    bucketMedia:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: crunchyfans-media
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - "GET"
+                - "HEAD"
+                - "POST"
+                - "PUT"
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              ExposedHeaders:
+                - ETag
+
+    bucketMediaProcessing:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: crunchyfans-media-processing
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - "GET"
+                - "HEAD"
+                - "POST"
+                - "PUT"
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              ExposedHeaders:
+                - ETag
+
+    queueTranscodeSubmit:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: queue-media-transcode-submit
+        RedrivePolicy:
+          maxReceiveCount: 1
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - dlqueueTranscodeSubmit
+              - Arn
+
+    dlqueueTranscodeSubmit:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: dlqueue-media-transcode-submit
+
+    queueTranscodeComplete:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: queue-media-transcode-complete
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - dlqueueTranscodeComplete
+              - Arn
+          maxReceiveCount: 1
+
+    dlqueueTranscodeComplete:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: dlqueue-media-transcode-complete

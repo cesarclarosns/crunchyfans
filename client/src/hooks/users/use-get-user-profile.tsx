@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { api } from '@/libs/apis';
-import { type UserProfile } from '@/models/users/user';
+import { type UserProfile } from '@/schemas/users/user';
 
 export function useGetUserProfileQuery(username: string | null) {
   return useQuery({

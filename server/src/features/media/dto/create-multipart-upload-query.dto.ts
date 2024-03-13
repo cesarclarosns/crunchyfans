@@ -12,13 +12,13 @@ export class CreateMultipartUploadQueryDto {
   @IsNotEmpty()
   fileKey: string;
 
-  @IsNumberString()
   @IsOptional()
+  @IsNumberString()
   partNumber: string;
 
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
   uploadId?: string;
 
   @IsString()

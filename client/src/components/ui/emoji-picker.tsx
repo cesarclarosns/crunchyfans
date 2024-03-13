@@ -2,7 +2,6 @@ import './emoji-picker.css';
 
 import Picker from '@emoji-mart/react';
 
-import { Icons } from './icons';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 export interface Emoji {
