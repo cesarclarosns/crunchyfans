@@ -3,7 +3,7 @@ export class BillingAccount {
   stripeCustomerId: string;
   stripeAccountId: string;
 
-  constructor(billingAccount: BillingAccount) {
-    Object.assign(this, billingAccount);
+  constructor(model: BillingAccount) {
+    Object.assign(this, model);
   }
 }

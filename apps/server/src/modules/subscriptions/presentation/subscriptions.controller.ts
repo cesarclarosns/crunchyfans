@@ -6,9 +6,9 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { CreateSubscriptionDto } from '../domain/dtos/create-subscription.dto';
 import { UpdateSubscriptionPlanDto } from '../domain/dtos/update-subscription-plan.dto';
-import { Subscription } from '../infrastructure/entities/subscription.entity';
-import { SubscriptionPlan } from '../infrastructure/entities/subscription-plan.entity';
-import { SubscriptionsService } from '../subscriptions.service';
+import { Subscription } from '../domain/entities/subscription.entity';
+import { SubscriptionPlan } from '../domain/entities/subscription-plan.entity';
+import { SubscriptionsService } from '../application/services/subscriptions.service';
 
 @Controller('subscriptions')
 export class SubscriptionsController {

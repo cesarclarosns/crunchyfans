@@ -5,9 +5,10 @@ export class SignInDto {
   @IsEmail()
   @ApiProperty()
   email: string;
-
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   password: string;
+  ip: string;
+  userAgent: string;
 }

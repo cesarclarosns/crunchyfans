@@ -9,7 +9,7 @@ export class PicturesDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  pictures?: string;
+  picture?: string;
 
   constructor(partial: Partial<PicturesDto>) {
     Object.assign(this, partial);
@@ -28,7 +28,7 @@ export class OAuthDto {
 }
 
 export class CreateUserDto {
-  _id?: string;
+  id?: string;
 
   @IsString()
   @IsNotEmpty()

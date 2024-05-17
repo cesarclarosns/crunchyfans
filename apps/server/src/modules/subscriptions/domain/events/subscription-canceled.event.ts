@@ -1,6 +1,8 @@
 export class SubscriptionCanceledEvent {
-  constructor(
-    readonly subscriberId: string,
-    readonly subscribeeId: string,
-  ) {}
+  subscriberId: string;
+  subscribeeId: string;
+
+  constructor(ev: SubscriptionCanceledEvent) {
+    Object.assign(this, ev);
+  }
 }

@@ -3,45 +3,45 @@ import { LoggerModule } from 'nestjs-pino';
 import { seeder } from 'nestjs-seeder';
 
 import { settings } from './config/settings';
-import { ChatsSeeder } from './modules/chats/chats.seeder';
 import {
   Chat,
   ChatSchema,
-} from './modules/chats/infrastructure/schemas/chat.schema';
+} from './modules/chats/domain/entities/chat.entity';
 import {
   LastReadMessagePerUser,
   LastReadMessagePerUserSchema,
-} from './modules/chats/infrastructure/schemas/last-read-message-per-user.schema';
+} from './modules/chats/domain/entities/user-chat.entity';
 import {
   Message,
   MessageSchema,
-} from './modules/chats/infrastructure/schemas/message.schema';
+} from './modules/chats/domain/entities/message.entity';
+import { ChatsSeeder } from './modules/chats/presentation/chats.seeder';
 import {
   Media,
   MediaSchema,
-} from './modules/media/infrastructure/entities/media.entity';
+} from './modules/media/domain/entities/media.entity';
 import { MediaSeeder } from './modules/media/infrastructure/media.seeder';
+import { PostsSeeder } from './modules/posts/infrastructure/posts.seeder';
 import {
   Post,
   PostSchema,
-} from './modules/posts/infrastructure/repositories/mongodb/schemas/post.schema';
+} from './modules/posts/domain/entities/post.entity';
 import {
   PostComment,
   PostCommentSchema,
-} from './modules/posts/infrastructure/repositories/mongodb/schemas/post-comment.schema';
+} from './modules/posts/domain/entities/post-comment.entity';
 import {
   PostCommentLike,
   PostCommentLikeSchema,
-} from './modules/posts/infrastructure/repositories/mongodb/schemas/post-comment-like.schema';
+} from './modules/posts/domain/entities/user-post-comment.entity';
 import {
   PostLike,
   PostLikeSchema,
-} from './modules/posts/infrastructure/repositories/mongodb/schemas/post-like.schema';
-import { PostsSeeder } from './modules/posts/posts.seeder';
+} from './modules/posts/domain/entities/post-like.entity';
 import {
   User,
   UserSchema,
-} from './modules/users/infrastructure/repositories/mongodb/schemas/user.schema';
+} from './modules/users/domain/entities/user.entity';
 import { UsersSeeder } from './modules/users/infrastructure/users.seeder';
 
 seeder({
@@ -53,7 +53,7 @@ seeder({
         },
       },
     }),
-    MongooseModule.forRoot(settings.DATABASE.MONGODB_URI),
+    MongooseModule.forRoot(settings.DATABASES.MONGODB_URI),
     MongooseModule.forFeature([
       // Media
       {

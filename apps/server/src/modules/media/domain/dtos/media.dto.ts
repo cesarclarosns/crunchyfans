@@ -1,26 +1,13 @@
-import { Exclude } from 'class-transformer';
-
 import { MediaType } from '../types/media-type';
-import { TranscodingStatus } from '../types/transcoding-status';
 
 export class MediaDto {
   id: string;
-
   type: MediaType;
-
   sources: Record<string, string>;
-
   source: string;
-
   preview: string;
-
   thumbnail: string;
-
-  @Exclude()
-  transcodingStatus: TranscodingStatus;
-
   isReady: boolean;
-
   hasError: boolean;
 
   constructor({ ...partial }: Partial<MediaDto>) {

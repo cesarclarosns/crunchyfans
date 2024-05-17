@@ -1,6 +1,8 @@
 export class SubscriptionCreatedEvent {
-  constructor(
-    readonly subscriberId: string,
-    readonly subscribeeId: string,
-  ) {}
+  subscriberId: string;
+  subscribeeId: string;
+
+  constructor(ev: SubscriptionCreatedEvent) {
+    Object.assign(this, ev);
+  }
 }

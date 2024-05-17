@@ -3,6 +3,7 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -25,41 +26,41 @@ import { UpdateUserDto } from '../../domain/dtos/update-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Post()
-  async createUser(@Body() body: CreateUserDto) {
-    return await this.usersService.createUser(body);
-  }
+  // @UseInterceptors(ClassSerializerInterceptor)
+  // @Post()
+  // async createUser(@Body() body: CreateUserDto) {
+  //   return await this.usersService.createUser(body);
+  // }
 
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Get()
-  async getUsersProfileBasic(@Query() query: GetUsersProfileBasicDto) {
-    return await this.usersService.findAllUsersBasicProfile({});
-  }
+  // @UseInterceptors(ClassSerializerInterceptor)
+  // @Get()
+  // async getUsersProfileBasic(@Query() query: GetUsersProfileBasicDto) {
+  //   return await this.usersService.findAllUsersBasicProfile({});
+  // }
 
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Get('me')
-  async getUserData(@Req() req: Request) {
-    const userId = req.user.sub;
+  // @UseInterceptors(ClassSerializerInterceptor)
+  // @Get('me')
+  // async getUserData(@Req() req: Request) {
+  //   const userId = req.user.sub;
 
-    return await this.usersService.findOneUserById(userId);
-  }
+  //   return await this.usersService.findOneUserById(userId);
+  // }
 
-  @Get(':id')
-  async getUser() {}
+  // @Get(':id')
+  // async getUser() {}
 
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Patch(':id')
-  async updateUser(@Param('id') userId: string, @Body() body: UpdateUserDto) {
-    return await this.usersService.updateUser(userId, body);
-  }
+  // @UseInterceptors(ClassSerializerInterceptor)
+  // @Patch(':id')
+  // async updateUser(@Param('id') userId: string, @Body() body: UpdateUserDto) {
+  //   return await this.usersService.updateUser(userId, body);
+  // }
 
-  @Public()
-  @UseGuards(OptionalAccessTokenGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Get(':username/profile')
-  async getUserProfile(
-    @Req() req: Request,
-    @Param('username') username: string,
-  ) {}
+  // @Public()
+  // @UseGuards(OptionalAccessTokenGuard)
+  // @UseInterceptors(ClassSerializerInterceptor)
+  // @Get(':username/profile')
+  // async getUserProfile(
+  //   @Req() req: Request,
+  //   @Param('username') username: string,
+  // ) {}
 }

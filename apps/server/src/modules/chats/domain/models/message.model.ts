@@ -8,9 +8,10 @@ export class Message {
   id: string;
   chatId: string;
   userId: string;
-  content: string;
+  text: string;
   medias: MessageMedia[];
   price: number;
+  createdAt: string;
 
   constructor(model: Message) {
     Object.assign(this, model);
@@ -19,7 +20,7 @@ export class Message {
 
 export class MessageWithViewerData extends Message {
   isRead: boolean;
-  canViewMedia: boolean;
+  canViewMedias: boolean;
 
   constructor(model: MessageWithViewerData) {
     super(model);

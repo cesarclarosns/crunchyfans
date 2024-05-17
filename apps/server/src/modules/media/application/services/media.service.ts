@@ -1,169 +1,94 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { settings } from '@/config/settings';
+import { StorageService } from '@/modules/media/application/services/storage.service';
+import { CreateMediaDto } from '@/modules/media/domain/dtos/create-media.dto';
+import { GetMediasDto } from '@/modules/media/domain/dtos/get-medias.dto';
+import { UpdateMediaDto } from '@/modules/media/domain/dtos/update-media.dto';
+import { Media } from '@/modules/media/domain/models/media.model';
+import { MediaRepository } from '@/modules/media/infrastructure/repositories/media.repository';
 
-import { CreateMediaDto } from '../../domain/dtos/create-media.dto';
-import { CreateMediaParamsDto } from '../../domain/dtos/create-media-params.dto';
-import { CreateMultipartUploadDto } from '../../domain/dtos/create-multipart-upload.dto';
-import { CreateUploadDto } from '../../domain/dtos/create-upload.dto';
-import { DeleteMultipartUploadDto } from '../../domain/dtos/delete-multipart-upload.dto';
-import { FindAllMediasDto } from '../../domain/dtos/get-medias.dto';
-import { MediaDto } from '../../domain/dtos/media.dto';
-import { UpdateMediaDto } from '../../domain/dtos/update-media.dto';
-import { TranscodingStatus } from '../../domain/types/transcoding-status';
-import { Media } from '../../infrastructure/entities/media.entity';
-import { getMediaTypeFromFileKey } from '../libs/utils';
-import { StorageService } from './storage.service';
+import { MEDIA_EVENTS, MediaCreatedEvent } from '../../domain/events';
 
 @Injectable()
 export class MediaService {
   constructor(
     @InjectPinoLogger(MediaService.name) private readonly logger: PinoLogger,
-
     private readonly eventEmitter: EventEmitter2,
     private readonly storageService: StorageService,
-    // private readonly transcodeMediaSubmitProducer: TranscodeMediaSubmitProducer,
+    private readonly mediaRepository: MediaRepository,
   ) {}
 
-  async create({ fileKey, userId, options }: CreateMediaParamsDto) {
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  async createMedia(create: CreateMediaDto) {
+    const media = await this.mediaRepository.createMedia(create);
 
-    try {
-      const mediaType = getMediaTypeFromFileKey(fileKey);
-      if (!mediaType) throw new BadRequestException('Invalid file');
-
-      const documents = await this.mediaModel.create(
-        [
-          new CreateMediaDto({
-            transcodingStatus: 'submitted',
-            type: mediaType,
-            userId,
-          }),
-        ],
-        {
-          session,
-        },
-      );
-      const document = documents[0];
-
-      const media = new MediaDto(document.toJSON());
-
-      // await this.transcodeMediaSubmitProducer.send({
-      //   fileKey: createMediaDto.fileKey,
-      //   id: media.id,
-      //   options: {
-      //     needsThumbnail: createMediaDto.options.needsThumbnail,
-      //     needsWatermark: createMediaDto.options.needsWatermark,
-      //     watermarkText: createMediaDto.options.watermarkText,
-      //   },
-      // });
-
-      await session.commitTransaction();
-
-      return media;
-    } catch (err) {
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      await session.endSession();
-    }
-  }
-
-  async findAll(findAllMediaDto: FindAllMediasDto): Promise<MediaDto[]> {
-    const documents = await this.mediaModel.find({
-      _id: { $in: findAllMediaDto.ids },
-    });
-
-    const medias = documents.map((document) => new MediaDto(document.toJSON()));
-    return medias;
-  }
-
-  async findOneById(id: string): Promise<MediaDto | null> {
-    const document = await this.mediaModel.findById(id);
-    if (!document) return null;
-
-    const media = new MediaDto(document.toJSON());
-    return media;
-  }
-
-  async update(
-    id: string,
-    updateMediaDto: UpdateMediaDto,
-  ): Promise<MediaDto | null> {
-    const document = await this.mediaModel.findOneAndUpdate(
-      { _id: id },
-      {
-        $set: updateMediaDto,
-      },
+    this.eventEmitter.emit(
+      MEDIA_EVENTS.mediaCreated,
+      new MediaCreatedEvent({ mediaId: media.id }),
     );
-    if (!document) return null;
 
-    const media = new MediaDto(document.toJSON());
     return media;
   }
 
-  async createUpload(createUploadDto: CreateUploadDto) {
-    const bucket = settings.MEDIA.S3_BUCKET_MEDIA_PROCESSING_NAME;
-
-    const url = await this.storageService.createUploadUrl({
-      bucket,
-      fileKey: createUploadDto.fileKey,
-    });
-
-    return { url };
+  async getMedias(filter: GetMediasDto) {
+    return await this.mediaRepository.getMedias(filter);
   }
 
-  async createMultipartUpload({
-    parts,
-    uploads,
-    uploadId,
-    partNumber,
-    fileKey,
-  }: CreateMultipartUploadDto) {
-    const bucket = settings.MEDIA.S3_BUCKET_MEDIA_PROCESSING_NAME;
-
-    if (uploads) {
-      return await this.storageService.createMultipartUpload({
-        bucket,
-        fileKey,
-      });
-    }
-
-    if (!!partNumber && !!uploadId) {
-      const url = await this.storageService.createMultipartUploadPartUrl({
-        bucket,
-        fileKey,
-        partNumber: +partNumber,
-        uploadId,
-      });
-
-      return { url };
-    }
-
-    if (!!uploadId && !!parts) {
-      return await this.storageService.completeMultipartUpload({
-        bucket,
-        fileKey,
-        parts,
-        uploadId,
-      });
-    }
-
-    throw new BadRequestException('Invalid query params');
+  async getMediaById(mediaId: string) {
+    return await this.mediaRepository.getMediaById(mediaId);
   }
 
-  async deleteMultipartUpload({ fileKey, uploadId }: DeleteMultipartUploadDto) {
-    const bucket = settings.MEDIA.S3_BUCKET_MEDIA_PROCESSING_NAME;
+  async updateMedia(mediaId: string, update: UpdateMediaDto) {
+    return await this.mediaRepository.updateMedia(mediaId, update);
+  }
 
-    return await this.storageService.deleteMultipartUpload({
-      bucket,
-      fileKey,
-      uploadId,
-    });
+  async deleteMedia(mediaId: string) {
+    return await this.mediaRepository.deleteMedia(mediaId);
+  }
+
+  async addDownloadUrlsToMedia(media: Media) {
+    const promises: Promise<void>[] = [];
+
+    if (media.source)
+      promises.push(
+        (async () => {
+          media.source = await this.storageService.createDownloadUrl(
+            media.source,
+          );
+        })(),
+      );
+
+    if (media.thubmnail)
+      promises.push(
+        (async () => {
+          media.thubmnail = await this.storageService.createDownloadUrl(
+            media.thubmnail,
+          );
+        })(),
+      );
+
+    if (media.preview)
+      promises.push(
+        (async () => {
+          media.preview = await this.storageService.createDownloadUrl(
+            media.preview,
+          );
+        })(),
+      );
+
+    if (media.sources) {
+      Object.keys(media.sources).forEach((key) => {
+        promises.push(
+          (async () => {
+            media.sources[key] = await this.storageService.createDownloadUrl(
+              media.sources[key],
+            );
+          })(),
+        );
+      });
+    }
+
+    await Promise.all(promises);
   }
 }

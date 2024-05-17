@@ -1,35 +1,36 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { MediaService } from '@/modules/media/application/services/media.service';
-
-import { ChatsService } from '../../../chats/chats.service';
-import { PostsService } from '../../../posts/posts.service';
-import { SubscriptionsService } from '../../../subscriptions/subscriptions.service';
 import { CreateUserDto } from '../../domain/dtos/create-user.dto';
 import { GetUsersProfileBasicDto } from '../../domain/dtos/get-users-profile-basic.dto';
 import { UpdateUserDto } from '../../domain/dtos/update-user.dto';
-import { User } from '../../domain/models/user.model';
+import { UserCreatedEvent, USERS_EVENTS } from '../../domain/events';
+import { User } from '../../domain/models/user';
 import { UserData } from '../../domain/models/user-data.model';
 import {
   UserProfile,
   UserProfileBasic,
-} from '../../domain/models/user-profile.model';
-import { IUsersRepository } from '../../domain/repositories/users.repository';
-import { IUsersService } from '../../domain/services/users.service';
+} from '../../domain/models/user-profile';
+import { UsersRepository } from '../../infrastructure/repositories/users.repository';
 
 @Injectable()
-export class UsersService implements IUsersService {
+export class UsersService {
   constructor(
     @InjectPinoLogger(UsersService.name) private readonly logger: PinoLogger,
-    @Inject(IUsersRepository)
-    private readonly usersRepository: IUsersRepository,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   async createUser(create: CreateUserDto): Promise<User> {
-    return await this.usersRepository.createUser(create);
+    const user = await this.usersRepository.createUser(create);
+
+    // this.eventEmitter.emit(
+    //   USERS_EVENTS.userCreated,
+    //   new UserCreatedEvent(user.id),
+    // );
+
+    return user;
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -72,10 +73,7 @@ export class UsersService implements IUsersService {
   async getUserProfileWithViewerDataByUsername(
     username: string,
     viewerId: string,
-  ): Promise<UserProfile> {
-    return await this.usersRepository.getUserProfileWithViewerDataByUsername(
-      username,
-      viewerId,
-    );
+  ): Promise<UserProfile | null> {
+    return null;
   }
 }

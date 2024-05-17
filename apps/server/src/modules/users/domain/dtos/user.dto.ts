@@ -1,8 +1,7 @@
 import { Exclude } from 'class-transformer';
 
 import { MediaDto } from '@/modules/media/domain/dtos/media.dto';
-
-import { UserStatus } from '../types/user-status';
+import { UserStatus } from '@/modules/users/domain/types/user-status';
 
 export class PicturesDto {
   cover?: MediaDto;

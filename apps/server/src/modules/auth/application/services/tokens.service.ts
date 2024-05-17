@@ -1,13 +1,87 @@
-import { ITokensService } from '../../domain/services/tokens.service';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-export class TokensService implements ITokensService {
-  async refreshTokens(userId: string) {}
+import { settings } from '@/config/settings';
+import { UsersService } from '@/modules/users/application/services/users.service';
 
-  getAccessToken: (payload: object) => Promise<string>;
+import { Tokens } from '../../domain/models/tokens';
+import { TokenPayload } from '../../domain/types/token-payload';
 
-  getRefreshToken: (payload: object) => Promise<string>;
+@Injectable()
+export class TokensService {
+  constructor(
+    @InjectPinoLogger(TokensService.name) private readonly logger: PinoLogger,
+    private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
+  ) {}
 
-  getCodeToken: (payload: object) => Promise<string>;
+  async createAccessToken(payload: object): Promise<string> {
+    return await this.jwtService.signAsync(payload, {
+      expiresIn: settings.AUTH.JWT_ACCESS_EXPIRE_MINUTES * 60,
+      secret: settings.AUTH.JWT_ACCESS_SECRET,
+    });
+  }
 
-  verifyCodeToken: (token: string) => Promise<object>;
+  async verifyAccessToken(token: string): Promise<object> {
+    try {
+      return await this.jwtService.verifyAsync(token, {
+        secret: settings.AUTH.JWT_ACCESS_SECRET,
+      });
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+
+  async createRefreshToken(payload: object): Promise<string> {
+    return await this.jwtService.signAsync(payload, {
+      expiresIn: settings.AUTH.JWT_REFRESH_EXPIRE_MINUTES * 60,
+      secret: settings.AUTH.JWT_REFRESH_SECRET,
+    });
+  }
+
+  async verifyRefreshToken(token: string): Promise<object> {
+    try {
+      return await this.jwtService.verifyAsync(token, {
+        secret: settings.AUTH.JWT_REFRESH_SECRET,
+      });
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+
+  async createLinkToken(payload: object): Promise<string> {
+    return await this.jwtService.signAsync(payload, {
+      expiresIn: settings.AUTH.JWT_LINK_EXPIRE_MINUTES * 60,
+      secret: settings.AUTH.JWT_LINK_SECRET,
+    });
+  }
+
+  async verifyLinkToken(token: string): Promise<object> {
+    try {
+      return await this.jwtService.verifyAsync(token, {
+        secret: settings.AUTH.JWT_LINK_SECRET,
+      });
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+
+  async refreshTokens(userId: string): Promise<Tokens> {
+    const user = await this.usersService.getUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const payload = {
+      sub: user.id,
+    } satisfies TokenPayload;
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.createAccessToken(payload),
+      this.createRefreshToken(payload),
+    ]);
+
+    return new Tokens({ accessToken, refreshToken });
+  }
 }

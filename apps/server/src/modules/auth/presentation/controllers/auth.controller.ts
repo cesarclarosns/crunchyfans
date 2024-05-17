@@ -4,10 +4,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
+  Inject,
   Patch,
   Post,
-  Put,
   Query,
   Req,
   Res,
@@ -22,55 +21,36 @@ import {
   ApiOkResponse,
   ApiResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { BadRequestResponseBodyDto } from '@/common/domain/dtos/bad-request-reponse-body.dto';
-import { UnauthorizedResponseBodyDto } from '@/common/domain/dtos/unauthorized-reponse-body.dto';
 import { settings } from '@/config/settings';
+import { Public } from '@/modules/auth/application/decorators/public.decorator';
+import { RefreshTokenGuard } from '@/modules/auth/application/guards';
+import { GoogleGuard } from '@/modules/auth/application/guards/google.guard';
+import { AuthService } from '@/modules/auth/application/services/auth.service';
+import { TokensService } from '@/modules/auth/application/services/tokens.service';
+import { AUTH_COOKIES } from '@/modules/auth/domain/constants/auth-cookies';
+import { AUTH_TOKENS } from '@/modules/auth/domain/constants/auth-tokens';
+import { SignInDto } from '@/modules/auth/domain/dtos/sign-in.dto';
+import { SignInWithLinkDto } from '@/modules/auth/domain/dtos/sign-in-with-link.dto';
+import { SignInWithLinkConsumeDto } from '@/modules/auth/domain/dtos/sign-in-with-link-consume.dto';
+import { SignUpDto } from '@/modules/auth/domain/dtos/sign-up.dto';
+import { TokensDto } from '@/modules/auth/domain/dtos/tokens.dto';
+import { UpdatePasswordDto } from '@/modules/auth/domain/dtos/update-password.dto';
+import { UsersService } from '@/modules/users/application/services/users.service';
 import { UserDto } from '@/modules/users/domain/dtos/user.dto';
-
-import { UsersService } from '../../../users/application/services/users.service';
-import { Public } from '../../application/decorators/public.decorator';
-import { AUTH_EVENTS } from '../../application/events';
-import { SignInWithPasswordlessEvent } from '../../application/events/sign-in-with-passwordless.event';
-import { RefreshTokenGuard } from '../../application/guards';
-import { GoogleGuard } from '../../application/guards/google.guard';
-import { AuthService } from '../../auth.service';
-import { AUTH_COOKIES } from '../../domain/constants/auth-cookies';
-import { AUTH_TOKENS } from '../../domain/constants/auth-tokens';
-import { SignInDto } from '../../domain/dtos/sign-in.dto';
-import { SignInWithPasswordlessDto } from '../../domain/dtos/sign-in-with-passwordless.dto';
-import { SignInWithPasswordlessRedirectDto } from '../../domain/dtos/sign-in-with-passwordless-redirect.dto';
-import { SignUpDto } from '../../domain/dtos/sign-up.dto';
-import { TokensDto } from '../../domain/dtos/tokens.dto';
-import { UpdatePasswordDto } from '../../domain/dtos/update-password.dto';
-
-/**
- * POST /signin
- * POST /signup
- * POST /signout
- *
- * PATCH /user/password
- * POST /refresh
- *
- * POST /signin/link
- * POST /signin/link/resend
- * POST /signin/link/consume
- *
- * GET /signinup/google
- * GET /signinup/google/callback
- */
 
 @ApiTags('auth')
 @ApiBearerAuth(AUTH_TOKENS.accessToken)
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
-    private readonly usersService: UsersService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService,
+    private readonly tokensService: TokensService,
   ) {}
 
   @Public()
@@ -87,9 +67,14 @@ export class AuthController {
   })
   @ApiBadRequestResponse()
   async signIn(
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Body() body: SignInDto,
   ) {
+    body.userAgent = req.headers['user-agent']!;
+    body.ip =
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!;
+
     const tokens = await this.authService.signIn(body);
 
     res.cookie(AUTH_COOKIES.refreshToken, tokens.refreshToken, {
@@ -110,22 +95,9 @@ export class AuthController {
   @ApiBadRequestResponse({
     type: BadRequestResponseBodyDto,
   })
-  async signUp(
-    @Body() body: SignUpDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async signUp(@Body() body: SignUpDto) {
     const user = await this.authService.signUp(body);
-
-    const tokens = await this.authService.refreshTokens(user.id);
-
-    res.cookie(AUTH_COOKIES.refreshToken, tokens.refreshToken, {
-      httpOnly: true,
-      path: '/',
-      sameSite: 'none',
-      secure: true,
-    });
-
-    return tokens;
+    return user;
   }
 
   @Public()
@@ -146,7 +118,7 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
 
-    const tokens = await this.authService.refreshTokens(userId);
+    const tokens = await this.tokensService.refreshTokens(userId);
 
     res.cookie(AUTH_COOKIES.refreshToken, tokens.refreshToken, {
       httpOnly: true,
@@ -165,33 +137,45 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
 
-    return await this.authService.updatePassword(userId, body);
+    return await this.authService.updateUserPassword(userId, body);
   }
 
   @Public()
   @Get('signin/link')
-  async signInWithLink(@Query() query: SignInWithPasswordlessDto) {}
+  async signInWithLink(@Req() req: Request, @Query() query: SignInWithLinkDto) {
+    query.userAgent = req.headers['user-agent']!;
+    query.ip =
+      (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!;
+
+    return await this.authService.signInWithLink(query);
+  }
 
   @Get('signin/link/consume')
-  async signInWithLinkConsume() {}
+  async signInWithLinkConsume(@Query() query: SignInWithLinkConsumeDto) {
+    const tokens = await this.authService.signInWithLinkConsume(query);
+    return tokens;
+  }
 
   @Public()
   @UseGuards(GoogleGuard)
   @Get('signinup/google')
-  async signInWithGoogle() {}
+  async signinupInWithGoogle() {}
 
   @Public()
   @UseGuards(GoogleGuard)
   @Get('signinup/google/callback')
-  async signInWithGoogleRedirect(@Req() req: Request, @Res() res: Response) {
+  async signinupInWithGoogleCallback(
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     const userId = req.user.sub;
 
-    const tokens = await this.authService.refreshTokens(userId);
+    const tokens = await this.tokensService.refreshTokens(userId);
 
     res.cookie(AUTH_COOKIES.refreshToken, tokens.refreshToken, {
       httpOnly: true,
       path: '/',
-      sameSite: 'none',
+      sameSite: 'lax',
       secure: true,
     });
 

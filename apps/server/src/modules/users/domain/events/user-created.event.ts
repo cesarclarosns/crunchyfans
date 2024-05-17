@@ -1,3 +1,7 @@
 export class UserCreatedEvent {
-  constructor(readonly userId: string) {}
+  readonly userId: string;
+
+  constructor(ev: UserCreatedEvent) {
+    Object.assign(this, ev);
+  }
 }

@@ -1,10 +1,14 @@
-import { IPasswordService } from '../../domain/services/password.service';
+import argon2 from 'argon2';
 
-export class PasswordService implements IPasswordService {
-  createPasswordHash: (password: string) => Promise<string>;
+export class PasswordService {
+  async createPasswordHash(password: string): Promise<string> {
+    return await argon2.hash(password);
+  }
 
-  verifyPassword: (
-    password: string,
+  async verifyPassword(
     hashedPassword: string,
-  ) => Promise<boolean>;
+    password: string,
+  ): Promise<boolean> {
+    return await argon2.verify(hashedPassword, password);
+  }
 }

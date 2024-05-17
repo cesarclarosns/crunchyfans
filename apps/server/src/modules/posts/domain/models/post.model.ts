@@ -10,7 +10,7 @@ export class PostMedia extends Media {
 
 export class Post {
   id: string;
-  content: string;
+  text: string;
   medias: PostMedia[];
   likesCount: number;
   commentsCount: number;
@@ -29,7 +29,7 @@ export class Post {
 
 export class PostWithViewerData extends Post {
   isLiked: boolean;
-  canViewMedia: boolean;
+  canViewMedias: boolean;
 
   constructor(model: PostWithViewerData) {
     super(model);

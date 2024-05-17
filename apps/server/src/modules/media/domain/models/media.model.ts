@@ -6,6 +6,12 @@ export class Media implements IModel {
   id: string;
   userId: string;
   type: MediaType;
+  processing: {
+    fileKey: string;
+    needsThumbnail: boolean;
+    needsPreview: boolean;
+    needsWatermark: boolean;
+  };
   sources: Record<string, string>;
   source: string;
   thubmnail: string;
@@ -17,5 +23,5 @@ export class Media implements IModel {
     Object.assign(model, this);
   }
 
-  toDto: () => any;
+  toDto() {}
 }

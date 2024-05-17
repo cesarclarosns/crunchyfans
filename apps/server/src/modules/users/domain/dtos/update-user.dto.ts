@@ -14,4 +14,10 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ValidateNested()
   @IsOptional()
   oauth?: OAuthDto;
+
+  constructor(partial: Partial<UpdateUserDto>) {
+    super(partial);
+
+    Object.assign(this, partial);
+  }
 }

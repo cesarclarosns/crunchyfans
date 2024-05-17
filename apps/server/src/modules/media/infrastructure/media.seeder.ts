@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Seeder } from 'nestjs-seeder';
 
-import { Media } from '@/modules/media/infrastructure/entities/media.entity';
-import { User } from '@/modules/users/infrastructure/repositories/mongodb/schemas/user.schema';
+import { Media } from '@/modules/media/domain/entities/media.entity';
+import { User } from '@/modules/users/domain/entities/user.entity';
 
 @Injectable()
 export class MediaSeeder implements Seeder {

@@ -21,7 +21,7 @@ import { FindAllPostsDto } from '../../domain/dtos/find-all-posts.dto';
 import { GetFeedDto } from '../../domain/dtos/get-feed.dto';
 import { UpdatePostDto } from '../../domain/dtos/update-post.dto';
 import { UpdatePostCommentDto } from '../../domain/dtos/update-post-comment.dto';
-import { PostsService } from '../../posts.service';
+import { PostsService } from '../../application/services/posts.service';
 
 /**
  * POST /

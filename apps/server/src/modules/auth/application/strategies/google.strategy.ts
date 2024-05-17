@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { validateOrReject } from 'class-validator';
 import { randomBytes } from 'crypto';
 import mongoose from 'mongoose';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
 
 import { settings } from '@/config/settings';
+import { MediaService } from '@/modules/media/application/services/media.service';
+import { StorageService } from '@/modules/media/application/services/storage.service';
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 
-import { AuthService } from '../../auth.service';
 import { AUTH_STRATEGIES } from '../../domain/constants/auth-strategies';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(
@@ -18,8 +21,11 @@ export class GoogleStrategy extends PassportStrategy(
   AUTH_STRATEGIES.google,
 ) {
   constructor(
-    private readonly usersService: UsersService,
+    @InjectPinoLogger(GoogleStrategy.name) private readonly logger: PinoLogger,
     private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+    private readonly mediaService: MediaService,
+    private readonly storageService: StorageService,
   ) {
     super({
       callbackURL: settings.AUTH.GOOGLE_CALLBACK_URL,
@@ -35,35 +41,55 @@ export class GoogleStrategy extends PassportStrategy(
     profile: Profile,
     done: VerifyCallback,
   ) {
-    const email = profile.emails?.[0].value;
+    const email = profile.emails![0].value;
     const name = profile.displayName;
     const googleId = profile.id;
+    const photo = profile.photos![0].value;
+
+    this.logger.trace('profile', { email, googleId, name, photo });
 
     try {
-      let user = await this.usersService.findOneUserByGoogleId(googleId);
+      const user = await this.usersService.getUserByGoogleId(googleId);
 
-      if (!user) {
-        const id = new mongoose.Types.ObjectId().toString();
-        const username = `u${id}`;
+      if (user) {
+      } else {
+        const media = await this.c;
 
-        const createUserDto = new CreateUserDto({
-          _id: id,
-          email,
-          name,
-          oauth: { googleId },
-          username,
-        });
-
-        await validateOrReject(createUserDto);
-
-        user = await this.usersService.createUser(createUserDto);
+        const newUser = await this.usersService.createUser(
+          new CreateUserDto({ email, name, oauth: { googleId } }),
+        );
       }
+    } catch (error) {
+      this.logger.error('validate', error);
 
-      const tokenPayload = this.authService.createTokenPayload(user);
-
-      done(null, tokenPayload);
-    } catch (err) {
-      done(err);
+      done(error);
     }
+
+    // try {
+    //   let user = await this.usersService.findOneUserByGoogleId(googleId);
+
+    //   if (!user) {
+    //     const id = new mongoose.Types.ObjectId().toString();
+    //     const username = `u${id}`;
+
+    //     const createUserDto = new CreateUserDto({
+    //       _id: id,
+    //       email,
+    //       name,
+    //       oauth: { googleId },
+    //       username,
+    //     });
+
+    //     await validateOrReject(createUserDto);
+
+    //     user = await this.usersService.createUser(createUserDto);
+    //   }
+
+    //   const tokenPayload = this.authService.createTokenPayload(user);
+
+    //   done(null, tokenPayload);
+    // } catch (err) {
+    //   done(err);
+    // }
   }
 }

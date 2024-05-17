@@ -2,7 +2,7 @@ export class MessageCreatedEvent {
   readonly chatId: string;
   readonly messageId: string;
 
-  constructor(event: MessageCreatedEvent) {
-    Object.assign(this, event);
+  constructor(ev: MessageCreatedEvent) {
+    Object.assign(this, ev);
   }
 }
