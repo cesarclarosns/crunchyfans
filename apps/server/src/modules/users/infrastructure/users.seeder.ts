@@ -4,7 +4,7 @@ import argon2 from 'argon2';
 import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
-import { User } from '@/modules/users/domain/entities/user.entity';
+import { User } from '@/modules/users/infrastructure/repositories/entities/user.entity';
 
 import { Media } from '../../media/domain/entities/media.entity';
 

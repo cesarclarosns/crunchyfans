@@ -1,24 +1,21 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { MediaModule } from '../../media/infrastructure/media.module';
-import { UsersModule } from '../../users/infrastructure/users.module';
-import { Post, PostSchema } from '../domain/entities/post.entity';
+import { MediaModule } from '@/modules/media/infrastructure/media.module';
+import { PostsService } from '@/modules/posts/application/services/posts.service';
 import {
+  Post,
   PostComment,
   PostCommentSchema,
-} from '../domain/entities/post-comment.entity';
-import { UserPost, UserPostSchema } from '../domain/entities/user-post.entity';
-import {
+  PostSchema,
+  UserPost,
   UserPostComment,
   UserPostCommentSchema,
-} from '../domain/entities/user-post-comment.entity';
-import {
+  UserPostSchema,
   UserPostsData,
   UserPostsDataSchema,
-} from '../domain/entities/user-posts-data.entity';
-import { PostsService } from '../application/services/posts.service';
-import { PostsController } from '../presentation/controllers/posts.controller';
+} from '@/modules/posts/domain/entities';
+import { PostsController } from '@/modules/posts/presentation/controllers/posts.controller';
 
 @Module({
   controllers: [PostsController],

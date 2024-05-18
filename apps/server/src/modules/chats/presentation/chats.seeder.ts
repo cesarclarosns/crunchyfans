@@ -3,10 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
-import { User } from '@/modules/users/domain/entities/user.entity';
+import { User } from '@/modules/users/infrastructure/repositories/entities/user.entity';
 
 import { Chat } from '../domain/entities/chat.entity';
-import { LastReadMessagePerUser } from '../domain/entities/user-chat.entity';
 import { Message } from '../domain/entities/message.entity';
 
 @Injectable()
@@ -16,8 +15,6 @@ export class ChatsSeeder implements Seeder {
     @InjectModel(Chat.name) private readonly chatModel: Model<Chat>,
     @InjectModel(Message.name)
     private readonly messageModel: Model<Message>,
-    @InjectModel(LastReadMessagePerUser.name)
-    private readonly lastReadMessagePerUserModel: Model<LastReadMessagePerUser>,
   ) {}
 
   async seed(): Promise<any> {
@@ -52,19 +49,6 @@ export class ChatsSeeder implements Seeder {
           },
           { $sample: { size: 10 } },
         ]);
-
-        await this.lastReadMessagePerUserModel.insertMany([
-          ...messages.map((message) => ({
-            chatId: message.chatId,
-            messageId: message._id,
-            userId: users[0]._id,
-          })),
-          ...messages.map((message) => ({
-            chatId: message.chatId,
-            messageId: message._id,
-            userId: user._id,
-          })),
-        ]);
       }),
     );
   }
@@ -73,7 +57,6 @@ export class ChatsSeeder implements Seeder {
     await Promise.all([
       this.chatModel.deleteMany({}),
       this.messageModel.deleteMany({}),
-      this.lastReadMessagePerUserModel.deleteMany({}),
     ]);
   }
 }

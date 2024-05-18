@@ -4,6 +4,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { settings } from '@/config/settings';
 import { UsersService } from '@/modules/users/application/services/users.service';
+import { User } from '@/modules/users/domain/models/user.model';
 
 import { Tokens } from '../../domain/models/tokens';
 import { TokenPayload } from '../../domain/types/token-payload';
@@ -16,7 +17,7 @@ export class TokensService {
     private readonly usersService: UsersService,
   ) {}
 
-  async createAccessToken(payload: object): Promise<string> {
+  async createAccessToken(payload: TokenPayload): Promise<string> {
     return await this.jwtService.signAsync(payload, {
       expiresIn: settings.AUTH.JWT_ACCESS_EXPIRE_MINUTES * 60,
       secret: settings.AUTH.JWT_ACCESS_SECRET,
@@ -33,7 +34,7 @@ export class TokensService {
     }
   }
 
-  async createRefreshToken(payload: object): Promise<string> {
+  async createRefreshToken(payload: TokenPayload): Promise<string> {
     return await this.jwtService.signAsync(payload, {
       expiresIn: settings.AUTH.JWT_REFRESH_EXPIRE_MINUTES * 60,
       secret: settings.AUTH.JWT_REFRESH_SECRET,
@@ -50,7 +51,7 @@ export class TokensService {
     }
   }
 
-  async createLinkToken(payload: object): Promise<string> {
+  async createLinkToken(payload: TokenPayload): Promise<string> {
     return await this.jwtService.signAsync(payload, {
       expiresIn: settings.AUTH.JWT_LINK_EXPIRE_MINUTES * 60,
       secret: settings.AUTH.JWT_LINK_SECRET,
@@ -73,9 +74,7 @@ export class TokensService {
       throw new UnauthorizedException();
     }
 
-    const payload = {
-      sub: user.id,
-    } satisfies TokenPayload;
+    const payload = this.createTokenPayload(user);
 
     const [accessToken, refreshToken] = await Promise.all([
       this.createAccessToken(payload),
@@ -83,5 +82,9 @@ export class TokensService {
     ]);
 
     return new Tokens({ accessToken, refreshToken });
+  }
+
+  createTokenPayload(user: User): TokenPayload {
+    return { sub: user.id };
   }
 }

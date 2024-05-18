@@ -16,6 +16,8 @@ import { ChatsController } from '@/modules/chats/presentation/controllers/chats.
 import { MediaModule } from '@/modules/media/infrastructure/media.module';
 import { UsersModule } from '@/modules/users/infrastructure/users.module';
 
+import { ChatsRepository } from './repositories/chats.repository';
+
 @Module({
   controllers: [ChatsController],
   exports: [ChatsService],
@@ -41,6 +43,6 @@ import { UsersModule } from '@/modules/users/infrastructure/users.module';
     MediaModule,
     forwardRef(() => UsersModule),
   ],
-  providers: [ChatsService],
+  providers: [ChatsService, ChatsRepository],
 })
 export class ChatsModule {}

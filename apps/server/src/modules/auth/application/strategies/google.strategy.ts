@@ -1,8 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { validateOrReject } from 'class-validator';
-import { randomBytes } from 'crypto';
-import mongoose from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
 
@@ -14,6 +11,7 @@ import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 
 import { AUTH_STRATEGIES } from '../../domain/constants/auth-strategies';
 import { AuthService } from '../services/auth.service';
+import { TokensService } from '../services/tokens.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(
@@ -26,6 +24,7 @@ export class GoogleStrategy extends PassportStrategy(
     private readonly usersService: UsersService,
     private readonly mediaService: MediaService,
     private readonly storageService: StorageService,
+    private readonly tokensService: TokensService,
   ) {
     super({
       callbackURL: settings.AUTH.GOOGLE_CALLBACK_URL,
@@ -49,47 +48,29 @@ export class GoogleStrategy extends PassportStrategy(
     this.logger.trace('profile', { email, googleId, name, photo });
 
     try {
-      const user = await this.usersService.getUserByGoogleId(googleId);
+      let user = await this.usersService.getUserByGoogleId(googleId);
 
-      if (user) {
-      } else {
-        const media = await this.c;
+      if (!user) {
+        // Create media
 
-        const newUser = await this.usersService.createUser(
-          new CreateUserDto({ email, name, oauth: { googleId } }),
+        user = await this.usersService.createUser(
+          new CreateUserDto({
+            email,
+            id: '',
+            name,
+            oauth: { googleId },
+            pictures: { profile: photo },
+          }),
         );
       }
+
+      const payload = this.tokensService.createTokenPayload(user);
+
+      done(null, payload);
     } catch (error) {
       this.logger.error('validate', error);
 
       done(error);
     }
-
-    // try {
-    //   let user = await this.usersService.findOneUserByGoogleId(googleId);
-
-    //   if (!user) {
-    //     const id = new mongoose.Types.ObjectId().toString();
-    //     const username = `u${id}`;
-
-    //     const createUserDto = new CreateUserDto({
-    //       _id: id,
-    //       email,
-    //       name,
-    //       oauth: { googleId },
-    //       username,
-    //     });
-
-    //     await validateOrReject(createUserDto);
-
-    //     user = await this.usersService.createUser(createUserDto);
-    //   }
-
-    //   const tokenPayload = this.authService.createTokenPayload(user);
-
-    //   done(null, tokenPayload);
-    // } catch (err) {
-    //   done(err);
-    // }
   }
 }

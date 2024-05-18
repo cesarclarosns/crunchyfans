@@ -17,14 +17,14 @@ import { UpdatePaymentDto } from '../../domain/dtos/update-payment.dto';
 import { Payment } from '../../domain/entities/payment.entity';
 import { stripe } from '../libs/stripe';
 
-stripe.subscriptions.create({
-  collection_method: 'charge_automatically',
-});
-stripe.subscriptions.retrieve('').then((subscription) => {
-  const invoice = subscription.latest_invoice as Stripe.Invoice;
-  const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
-  paymentIntent.status == '';
-});
+// stripe.subscriptions.create({
+//   collection_method: 'charge_automatically',
+// });
+// stripe.subscriptions.retrieve('').then((subscription) => {
+//   const invoice = subscription.latest_invoice as Stripe.Invoice;
+//   const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+//   paymentIntent.status == '';
+// });
 
 @Injectable()
 export class PaymentsService {

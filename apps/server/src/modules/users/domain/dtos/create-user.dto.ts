@@ -9,7 +9,7 @@ export class PicturesDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  picture?: string;
+  profile?: string;
 
   constructor(partial: Partial<PicturesDto>) {
     Object.assign(this, partial);

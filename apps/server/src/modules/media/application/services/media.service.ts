@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { settings } from '@/config/settings';
 import { StorageService } from '@/modules/media/application/services/storage.service';
 import { CreateMediaDto } from '@/modules/media/domain/dtos/create-media.dto';
 import { GetMediasDto } from '@/modules/media/domain/dtos/get-medias.dto';
@@ -53,27 +54,30 @@ export class MediaService {
     if (media.source)
       promises.push(
         (async () => {
-          media.source = await this.storageService.createDownloadUrl(
-            media.source,
-          );
+          media.source = await this.storageService.createDownloadUrl({
+            bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+            fileKey: media.source,
+          });
         })(),
       );
 
     if (media.thubmnail)
       promises.push(
         (async () => {
-          media.thubmnail = await this.storageService.createDownloadUrl(
-            media.thubmnail,
-          );
+          media.thubmnail = await this.storageService.createDownloadUrl({
+            bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+            fileKey: media.thubmnail,
+          });
         })(),
       );
 
     if (media.preview)
       promises.push(
         (async () => {
-          media.preview = await this.storageService.createDownloadUrl(
-            media.preview,
-          );
+          media.preview = await this.storageService.createDownloadUrl({
+            bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+            fileKey: media.preview,
+          });
         })(),
       );
 
@@ -81,9 +85,10 @@ export class MediaService {
       Object.keys(media.sources).forEach((key) => {
         promises.push(
           (async () => {
-            media.sources[key] = await this.storageService.createDownloadUrl(
-              media.sources[key],
-            );
+            media.sources[key] = await this.storageService.createDownloadUrl({
+              bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+              fileKey: media.sources[key],
+            });
           })(),
         );
       });

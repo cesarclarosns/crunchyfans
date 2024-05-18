@@ -60,30 +60,30 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { payload: null, status: 'success' };
   }
 
-  @OnEvent(CHATS_EVENTS.MessageCreated)
-  async handleChatMessageCreatedEvent(payload: MessageCreatedEvent) {
-    const [chat, message] = await Promise.all([
-      this.chatsService.findOneChatById(payload.chatId),
-      this.chatsService.findOneMessageById(payload.messageId),
-    ]);
+  // @OnEvent(CHATS_EVENTS.MessageCreated)
+  // async handleChatMessageCreatedEvent(payload: MessageCreatedEvent) {
+  //   const [chat, message] = await Promise.all([
+  //     this.chatsService.findOneChatById(payload.chatId),
+  //     this.chatsService.findOneMessageById(payload.messageId),
+  //   ]);
 
-    // if (chat && message) {
-    //   chat.lastMessage = message;
+  //   // if (chat && message) {
+  //   //   chat.lastMessage = message;
 
-    //   this.server
-    //     .to(chat.participants.map((userId) => `users:${userId}`))
-    //     .emit('chats/new-message', { chat, message });
-    // }
-  }
+  //   //   this.server
+  //   //     .to(chat.participants.map((userId) => `users:${userId}`))
+  //   //     .emit('chats/new-message', { chat, message });
+  //   // }
+  // }
 
-  @OnEvent(CHATS_EVENTS.MessageRead)
-  async handleChatMessageReadEvent(payload: MessageReadEvent) {
-    const chat = await this.chatsService.findOneChatById(payload.chatId);
+  // @OnEvent(CHATS_EVENTS.MessageRead)
+  // async handleChatMessageReadEvent(payload: MessageReadEvent) {
+  //   const chat = await this.chatsService.findOneChatById(payload.chatId);
 
-    if (!chat) return;
+  //   if (!chat) return;
 
-    this.server
-      .to(chat.participants.map((user) => `users:${user}`))
-      .emit('chats/message-read', payload);
-  }
+  //   this.server
+  //     .to(chat.participants.map((user) => `users:${user}`))
+  //     .emit('chats/message-read', payload);
+  // }
 }

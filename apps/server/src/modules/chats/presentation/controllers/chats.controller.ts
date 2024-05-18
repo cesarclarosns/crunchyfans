@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { ChatsService } from '../../application/services/chats.service';
 import { CreateChatDto } from '../../domain/dtos/create-chat.dto';
@@ -38,39 +39,37 @@ import { ChatsRepository } from '../../infrastructure/repositories/chats.reposit
 @Controller('chats')
 export class ChatsController {
   constructor(
-    private readonly chatsService: ChatsService,
-    private readonly chatsRepository: ChatsRepository,
+    @InjectPinoLogger(ChatsController.name)
+    private readonly _logger: PinoLogger,
+    private readonly _chatsService: ChatsService,
+    private readonly _chatsRepository: ChatsRepository,
   ) {}
 
   @Post()
   async createChat(@Body() body: CreateChatDto) {
-    return await this.chatsService.createChat(body);
+    return await this._chatsService.createChat(body);
   }
 
   @Get()
   async getChats(@Req() req: Request, @Query() query: GetChatsDto) {
     const userId = req.user.sub;
 
-    return await this.chatsRepository.getChatsWithViewerData(query, userId);
+    return await this._chatsRepository.getChatsWithViewerData(query, userId);
   }
 
   @Get(':chatId')
   async getChatById(@Req() req: Request, @Param('chatId') chatId: string) {
-    return await this.chatsRepository.getChatById(chatId);
+    return await this._chatsRepository.getChatById(chatId);
   }
 
   @Patch(':chatId')
   async updateChat(
     @Param('chatId') chatId: string,
     @Body() body: UpdateChatDto,
-  ) {
-    return await this.chatsService.updateChat(chatId, body);
-  }
+  ) {}
 
   @Delete(':chatId')
-  async removeChat(@Param('chatId') chatId: string) {
-    return await this.chatsService.removeChat(chatId);
-  }
+  async removeChat(@Param('chatId') chatId: string) {}
 
   @Post(':chatId/messages')
   async createMessage(
@@ -83,40 +82,32 @@ export class ChatsController {
     body.userId = userId;
     body.chatId = chatId;
 
-    return await this.chatsService.createMessage(body);
+    return await this._chatsService.createMessage(body);
   }
 
   @Get(':chatId/messages')
   async getMessages(
     @Param('chatId') chatId: string,
-    @Query() query: FindAllMessagesDto,
+    @Query() query: GetMessagesDto,
   ) {
     query.chatId = chatId;
-
-    return await this.chatsService.findAllMessages(query);
   }
 
   @Get(':chatId/messages/:messageId')
-  async getMessageById(@Param('messageId') messageId: string) {
-    return await this.chatsService.findOneMessageById(messageId);
-  }
+  async getMessageById(@Param('messageId') messageId: string) {}
 
   @Patch(':chatId/messages/:messageId')
   async updateMessage(
     @Req() req: Request,
     @Param('messageId') messageId: string,
     @Body() updateMessageDto: UpdateMessageDto,
-  ) {
-    return await this.chatsService.updateMessage(messageId, updateMessageDto);
-  }
+  ) {}
 
   @Delete(':chatId/messages/:messageId')
   async deleteMessage(
     @Req() req: Request,
     @Param('messageId') messageId: string,
-  ) {
-    return await this.chatsService.deleteMessage(messageId);
-  }
+  ) {}
 
   @Post(':chatId/messages/:messageId/read')
   async readMessage(
@@ -125,8 +116,6 @@ export class ChatsController {
     @Param('messageId') messageId: string,
   ) {
     const userId = req.user.sub;
-
-    return await this.chatsService.readMessage({ chatId, messageId, userId });
   }
 
   @Post('massive-message')
@@ -137,9 +126,5 @@ export class ChatsController {
     const userId = req.user.sub;
 
     createMassiveMessageDto.userId = userId;
-
-    return await this.chatsService.createMassiveMessage(
-      createMassiveMessageDto,
-    );
   }
 }

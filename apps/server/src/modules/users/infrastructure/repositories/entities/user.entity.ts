@@ -4,7 +4,7 @@ import { Factory } from 'nestjs-seeder';
 
 import { Media } from '@/modules/media/domain/entities/media.entity';
 
-import { UserStatus } from '../types/user-status';
+import { UserStatus } from '../../../domain/types/user-status';
 
 @Schema({
   _id: false,
@@ -103,6 +103,10 @@ export class User extends Document {
     type: OAuthSchema,
   })
   oauth: OAuth;
+
+  isGay() {
+    return true;
+  }
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -1,6 +1,3 @@
-import { IModel } from '@/common/domain/model';
-
-import { UserDto } from '../dtos/user.dto';
 import { UserStatus } from '../types/user-status';
 
 export class User {
@@ -15,7 +12,7 @@ export class User {
   status: UserStatus;
   lastSeen: string;
   oauth: { googleId: string };
-  pictures: { cover: string; pictures: string };
+  pictures: { cover: string; profile: string };
   isEmailVerified: boolean;
 
   constructor(model: User) {

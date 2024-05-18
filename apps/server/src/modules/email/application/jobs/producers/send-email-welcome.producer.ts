@@ -5,28 +5,28 @@ import { Queue } from 'bullmq';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { EMAIL_JOBS, SendEmailWelcomeJob } from '@/modules/email/domain/jobs';
+import { UsersService } from '@/modules/users/application/services/users.service';
 import { UserCreatedEvent, USERS_EVENTS } from '@/modules/users/domain/events';
-import { IUsersService } from '@/modules/users/domain/services/users.service';
 
 export class SendEmailWelcomeProducer {
   constructor(
     @InjectPinoLogger(SendEmailWelcomeProducer.name)
-    private readonly logger: PinoLogger,
+    private readonly _logger: PinoLogger,
     @InjectQueue(EMAIL_JOBS.sendEmailWelcome)
-    private readonly queue: Queue,
-    @Inject(IUsersService) private readonly usersService: IUsersService,
+    private readonly _queue: Queue,
+    private readonly _usersService: UsersService,
   ) {}
 
   @OnEvent(USERS_EVENTS.userCreated)
   async execute(ev: UserCreatedEvent) {
-    const user = await this.usersService.getUserById(ev.userId);
+    const user = await this._usersService.getUserById(ev.userId);
     if (!user) return;
 
-    const job = await this.queue.add(
+    const job = await this._queue.add(
       EMAIL_JOBS.sendEmailWelcome,
       new SendEmailWelcomeJob(user.email),
     );
 
-    this.logger.debug(job);
+    this._logger.debug(job);
   }
 }

@@ -1,18 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { CreateUserDto } from '../../domain/dtos/create-user.dto';
-import { GetUsersProfileBasicDto } from '../../domain/dtos/get-users-profile-basic.dto';
-import { UpdateUserDto } from '../../domain/dtos/update-user.dto';
-import { UserCreatedEvent, USERS_EVENTS } from '../../domain/events';
-import { User } from '../../domain/models/user';
-import { UserData } from '../../domain/models/user-data.model';
+import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
+import { GetUsersProfileBasicDto } from '@/modules/users/domain/dtos/get-users-profile-basic.dto';
+import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
+import { UserCreatedEvent, USERS_EVENTS } from '@/modules/users/domain/events';
+import { User } from '@/modules/users/domain/models/user.model';
+import { UserData } from '@/modules/users/domain/models/user-data.model';
 import {
   UserProfile,
   UserProfileBasic,
-} from '../../domain/models/user-profile';
-import { UsersRepository } from '../../infrastructure/repositories/users.repository';
+} from '@/modules/users/domain/models/user-profile.model';
+import { UsersRepository } from '@/modules/users/infrastructure/repositories/users.repository';
 
 @Injectable()
 export class UsersService {
@@ -25,10 +25,10 @@ export class UsersService {
   async createUser(create: CreateUserDto): Promise<User> {
     const user = await this.usersRepository.createUser(create);
 
-    // this.eventEmitter.emit(
-    //   USERS_EVENTS.userCreated,
-    //   new UserCreatedEvent(user.id),
-    // );
+    this.eventEmitter.emit(
+      USERS_EVENTS.userCreated,
+      new UserCreatedEvent({ userId: user.id }),
+    );
 
     return user;
   }
@@ -61,7 +61,8 @@ export class UsersService {
   }
 
   async getUserData(userId: string): Promise<UserData | null> {
-    return await this.usersRepository.getUserData(userId);
+    return null;
+    // return await this.usersRepository.getUserData(userId);
   }
 
   async getUsersProfileBasic(

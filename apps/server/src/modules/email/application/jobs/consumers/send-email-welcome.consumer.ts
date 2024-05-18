@@ -8,7 +8,7 @@ import { EMAIL_JOBS } from '@/modules/email/domain/jobs';
 export class SendEmailWelcomeConsumer {
   constructor(
     @InjectPinoLogger(SendEmailWelcomeConsumer.name)
-    private readonly logger: PinoLogger,
+    private readonly _logger: PinoLogger,
   ) {}
 
   async process(job: Job<unknown>) {}

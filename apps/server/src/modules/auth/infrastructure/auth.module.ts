@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
+import { MediaModule } from '@/modules/media/infrastructure/media.module';
 import { UsersModule } from '@/modules/users/infrastructure/users.module';
 
 import {
@@ -21,7 +22,7 @@ import { AuthController } from '../presentation/controllers/auth.controller';
 @Module({
   controllers: [AuthController],
   exports: [PasswordService, TokensService, AuthService],
-  imports: [JwtModule.register({}), UsersModule],
+  imports: [JwtModule.register({}), UsersModule, MediaModule],
   providers: [
     PasswordService,
     TokensService,

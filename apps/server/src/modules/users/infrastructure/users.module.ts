@@ -7,7 +7,7 @@ import { NotificationsModule } from '../../notifications/infrastructure/notifica
 import { PostsModule } from '../../posts/infrastructure/posts.module';
 import { SubscriptionsModule } from '../../subscriptions/infrastructure/subscriptions.module';
 import { UsersService } from '../application/services/users.service';
-import { User, UserSchema } from '../domain/entities/user.entity';
+import { User, UserSchema } from './repositories/entities/user.entity';
 import { UsersController } from '../presentation/controllers/users.controller';
 import { UsersRepository } from './repositories/users.repository';
 

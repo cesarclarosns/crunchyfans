@@ -25,494 +25,494 @@ export class PostsService {
     private readonly mediaService: MediaService,
   ) {}
 
-  async createPost(createPostDto: CreatePostDto): Promise<PostDto> {
-    const post = await this.postModel.create(createPostDto);
-    return post.toJSON();
-  }
+  // async createPost(createPostDto: CreatePostDto): Promise<PostDto> {
+  //   const post = await this.postModel.create(createPostDto);
+  //   return post.toJSON();
+  // }
 
-  async findAllPosts(
-    { limit, skip, cursor }: FindAllPostsDto,
-    toUserId?: string,
-  ): Promise<PostDto[]> {
-    this.logger.trace('findAllPosts');
+  // async findAllPosts(
+  //   { limit, skip, cursor }: FindAllPostsDto,
+  //   toUserId?: string,
+  // ): Promise<PostDto[]> {
+  //   this.logger.trace('findAllPosts');
 
-    let documents = await this.postModel.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(toUserId),
-          ...(!!cursor
-            ? {
-                _id: { $lt: new mongoose.Types.ObjectId(cursor) },
-              }
-            : {}),
-        },
-      },
-      {
-        $set: {
-          createdAt: { $toDate: '$_id' },
-        },
-      },
-      {
-        $sort: {
-          _id: -1,
-        },
-      },
-      {
-        $skip: +skip,
-      },
-      {
-        $limit: +limit,
-      },
-      ...(!!toUserId
-        ? [
-            {
-              $lookup: {
-                as: 'isLiked',
-                foreignField: 'postId',
-                from: 'postLikes',
-                localField: '_id',
-                pipeline: [
-                  {
-                    $match: {
-                      userId: new mongoose.Types.ObjectId(toUserId),
-                    },
-                  },
-                ],
-              },
-            },
-            {
-              $set: {
-                isLiked: {
-                  $cond: {
-                    else: false,
-                    if: {
-                      $ne: ['$isLiked', []],
-                    },
-                    then: true,
-                  },
-                },
-              },
-            },
-          ]
-        : []),
-    ]);
+  //   let documents = await this.postModel.aggregate([
+  //     {
+  //       $match: {
+  //         userId: new mongoose.Types.ObjectId(toUserId),
+  //         ...(!!cursor
+  //           ? {
+  //               _id: { $lt: new mongoose.Types.ObjectId(cursor) },
+  //             }
+  //           : {}),
+  //       },
+  //     },
+  //     {
+  //       $set: {
+  //         createdAt: { $toDate: '$_id' },
+  //       },
+  //     },
+  //     {
+  //       $sort: {
+  //         _id: -1,
+  //       },
+  //     },
+  //     {
+  //       $skip: +skip,
+  //     },
+  //     {
+  //       $limit: +limit,
+  //     },
+  //     ...(!!toUserId
+  //       ? [
+  //           {
+  //             $lookup: {
+  //               as: 'isLiked',
+  //               foreignField: 'postId',
+  //               from: 'postLikes',
+  //               localField: '_id',
+  //               pipeline: [
+  //                 {
+  //                   $match: {
+  //                     userId: new mongoose.Types.ObjectId(toUserId),
+  //                   },
+  //                 },
+  //               ],
+  //             },
+  //           },
+  //           {
+  //             $set: {
+  //               isLiked: {
+  //                 $cond: {
+  //                   else: false,
+  //                   if: {
+  //                     $ne: ['$isLiked', []],
+  //                   },
+  //                   then: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         ]
+  //       : []),
+  //   ]);
 
-    documents = await this.postModel.populate(documents, [{ path: 'media' }]);
+  //   documents = await this.postModel.populate(documents, [{ path: 'media' }]);
 
-    const posts: PostDto[] = documents.map((doc) => doc.toJSON());
+  //   const posts: PostDto[] = documents.map((doc) => doc.toJSON());
 
-    for (const post of posts) {
-    }
+  //   for (const post of posts) {
+  //   }
 
-    this.logger.trace({ posts }, 'findAllPosts done');
+  //   this.logger.trace({ posts }, 'findAllPosts done');
 
-    return posts;
-  }
+  //   return posts;
+  // }
 
-  async findOnePostById(
-    postId: string,
-    toUserId?: string,
-  ): Promise<PostDto | null> {
-    let documents = await this.postModel.aggregate([
-      {
-        $match: {
-          _id: new mongoose.Types.ObjectId(postId),
-        },
-      },
-      ...(!!toUserId
-        ? [
-            {
-              $lookup: {
-                as: 'isLiked',
-                foreignField: 'postId',
-                from: 'postLike',
-                localField: '_id',
-                pipeline: [
-                  {
-                    $match: {
-                      userId: new mongoose.Types.ObjectId(toUserId),
-                    },
-                  },
-                ],
-              },
-            },
-            {
-              $set: {
-                isLiked: {
-                  $cond: {
-                    else: false,
-                    if: {
-                      $ne: ['$isLiked', []],
-                    },
-                    then: true,
-                  },
-                },
-              },
-            },
-          ]
-        : []),
-    ]);
+  // async findOnePostById(
+  //   postId: string,
+  //   toUserId?: string,
+  // ): Promise<PostDto | null> {
+  //   let documents = await this.postModel.aggregate([
+  //     {
+  //       $match: {
+  //         _id: new mongoose.Types.ObjectId(postId),
+  //       },
+  //     },
+  //     ...(!!toUserId
+  //       ? [
+  //           {
+  //             $lookup: {
+  //               as: 'isLiked',
+  //               foreignField: 'postId',
+  //               from: 'postLike',
+  //               localField: '_id',
+  //               pipeline: [
+  //                 {
+  //                   $match: {
+  //                     userId: new mongoose.Types.ObjectId(toUserId),
+  //                   },
+  //                 },
+  //               ],
+  //             },
+  //           },
+  //           {
+  //             $set: {
+  //               isLiked: {
+  //                 $cond: {
+  //                   else: false,
+  //                   if: {
+  //                     $ne: ['$isLiked', []],
+  //                   },
+  //                   then: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         ]
+  //       : []),
+  //   ]);
 
-    documents = await this.postModel.populate(documents, [{ path: 'media' }]);
+  //   documents = await this.postModel.populate(documents, [{ path: 'media' }]);
 
-    const document = documents.at(0);
-    if (!document) return null;
+  //   const document = documents.at(0);
+  //   if (!document) return null;
 
-    const post = document.toJSON();
-    return post;
-  }
+  //   const post = document.toJSON();
+  //   return post;
+  // }
 
-  async updatePost(postId: string, updatePostDto: UpdatePostDto) {
-    return await this.postModel.findOneAndUpdate(
-      { _id: postId },
-      updatePostDto,
-      {
-        new: true,
-      },
-    );
-  }
+  // async updatePost(postId: string, updatePostDto: UpdatePostDto) {
+  //   return await this.postModel.findOneAndUpdate(
+  //     { _id: postId },
+  //     updatePostDto,
+  //     {
+  //       new: true,
+  //     },
+  //   );
+  // }
 
-  async removePost(postId: string) {
-    return await this.postModel.deleteOne({
-      _id: postId,
-    });
-  }
+  // async removePost(postId: string) {
+  //   return await this.postModel.deleteOne({
+  //     _id: postId,
+  //   });
+  // }
 
-  async createPostLike({
-    postId,
-    userId,
-  }: {
-    postId: string;
-    userId: string;
-  }): Promise<void> {
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  // async createPostLike({
+  //   postId,
+  //   userId,
+  // }: {
+  //   postId: string;
+  //   userId: string;
+  // }): Promise<void> {
+  //   const session = await this.connection.startSession();
+  //   session.startTransaction();
 
-    try {
-      const document = await this.postLikeModel.findOneAndUpdate(
-        {
-          postId,
-          userId,
-        },
-        {},
-        { new: true, session, upsert: true },
-      );
+  //   try {
+  //     const document = await this.postLikeModel.findOneAndUpdate(
+  //       {
+  //         postId,
+  //         userId,
+  //       },
+  //       {},
+  //       { new: true, session, upsert: true },
+  //     );
 
-      if (document) {
-        await this.postModel.updateOne(
-          { _id: postId },
-          {
-            $inc: {
-              likesCount: 1,
-            },
-          },
-          {
-            session,
-          },
-        );
-      }
+  //     if (document) {
+  //       await this.postModel.updateOne(
+  //         { _id: postId },
+  //         {
+  //           $inc: {
+  //             likesCount: 1,
+  //           },
+  //         },
+  //         {
+  //           session,
+  //         },
+  //       );
+  //     }
 
-      await session.commitTransaction();
-    } catch (err) {
-      console.log(err);
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      await session.endSession();
-    }
-  }
+  //     await session.commitTransaction();
+  //   } catch (err) {
+  //     console.log(err);
+  //     await session.abortTransaction();
+  //     throw err;
+  //   } finally {
+  //     await session.endSession();
+  //   }
+  // }
 
-  async deletePostLike({ postId, userId }: { postId: string; userId: string }) {
-    this.logger.debug('deletePostLike');
+  // async deletePostLike({ postId, userId }: { postId: string; userId: string }) {
+  //   this.logger.debug('deletePostLike');
 
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  //   const session = await this.connection.startSession();
+  //   session.startTransaction();
 
-    try {
-      const result = await this.postLikeModel.deleteOne(
-        {
-          postId,
-          userId,
-        },
-        { session },
-      );
+  //   try {
+  //     const result = await this.postLikeModel.deleteOne(
+  //       {
+  //         postId,
+  //         userId,
+  //       },
+  //       { session },
+  //     );
 
-      if (result.deletedCount) {
-        await this.postModel.updateOne(
-          { _id: postId },
-          {
-            $inc: {
-              likesCount: -1,
-            },
-          },
-          {
-            session,
-          },
-        );
-      }
+  //     if (result.deletedCount) {
+  //       await this.postModel.updateOne(
+  //         { _id: postId },
+  //         {
+  //           $inc: {
+  //             likesCount: -1,
+  //           },
+  //         },
+  //         {
+  //           session,
+  //         },
+  //       );
+  //     }
 
-      await session.commitTransaction();
-    } catch (err) {
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      await session.endSession();
-    }
+  //     await session.commitTransaction();
+  //   } catch (err) {
+  //     await session.abortTransaction();
+  //     throw err;
+  //   } finally {
+  //     await session.endSession();
+  //   }
 
-    this.logger.debug('deletePostLike done');
-  }
+  //   this.logger.debug('deletePostLike done');
+  // }
 
-  async createPostComment(createPostCommentDto: CreatePostCommentDto) {
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  // async createPostComment(createPostCommentDto: CreatePostCommentDto) {
+  //   const session = await this.connection.startSession();
+  //   session.startTransaction();
 
-    try {
-      await this.postCommentModel.insertMany([createPostCommentDto], {
-        session,
-      });
+  //   try {
+  //     await this.postCommentModel.insertMany([createPostCommentDto], {
+  //       session,
+  //     });
 
-      await this.postModel.updateOne(
-        { _id: createPostCommentDto.postId },
-        {
-          $inc: {
-            commentsCount: 1,
-          },
-        },
-        { session },
-      );
+  //     await this.postModel.updateOne(
+  //       { _id: createPostCommentDto.postId },
+  //       {
+  //         $inc: {
+  //           commentsCount: 1,
+  //         },
+  //       },
+  //       { session },
+  //     );
 
-      if (!!createPostCommentDto.postCommentId) {
-        await this.postCommentModel.updateOne(
-          { _id: createPostCommentDto.postCommentId },
-          {
-            $inc: {
-              commentsCount: 1,
-            },
-          },
-          {
-            session,
-          },
-        );
-      }
-      await session.commitTransaction();
-    } catch (err) {
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      await session.endSession();
-    }
-  }
+  //     if (!!createPostCommentDto.postCommentId) {
+  //       await this.postCommentModel.updateOne(
+  //         { _id: createPostCommentDto.postCommentId },
+  //         {
+  //           $inc: {
+  //             commentsCount: 1,
+  //           },
+  //         },
+  //         {
+  //           session,
+  //         },
+  //       );
+  //     }
+  //     await session.commitTransaction();
+  //   } catch (err) {
+  //     await session.abortTransaction();
+  //     throw err;
+  //   } finally {
+  //     await session.endSession();
+  //   }
+  // }
 
-  async findAllPostComments(
-    { limit, skip, postId, postCommentId, cursor }: FindAllPostCommentsDto,
-    toUserId?: string,
-  ) {
-    const documents = await this.postCommentModel.aggregate([
-      {
-        $match: {
-          postId: new mongoose.Types.ObjectId(postId),
-          ...(postCommentId
-            ? {
-                postCommentId: new mongoose.Types.ObjectId(postCommentId),
-              }
-            : {
-                postCommentId: { $exists: false },
-              }),
-          ...(!!cursor
-            ? {
-                _id: {
-                  $gt: new mongoose.Types.ObjectId(cursor),
-                },
-              }
-            : {}),
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-      {
-        $skip: +skip,
-      },
-      {
-        $limit: +limit,
-      },
-      {
-        $set: {
-          createdAt: {
-            $toDate: '$_id',
-          },
-        },
-      },
-      ...(!!toUserId
-        ? [
-            {
-              $lookup: {
-                as: 'isLiked',
-                foreignField: 'postCommentId',
-                from: 'postCommentLikes',
-                localField: '_id',
-                pipeline: [
-                  {
-                    $match: {
-                      userId: new mongoose.Types.ObjectId(toUserId),
-                    },
-                  },
-                ],
-              },
-            },
-            {
-              $set: {
-                isLiked: {
-                  $cond: {
-                    else: false,
-                    if: {
-                      $ne: ['$isLiked', []],
-                    },
-                    then: true,
-                  },
-                },
-              },
-            },
-          ]
-        : []),
-    ]);
+  // async findAllPostComments(
+  //   { limit, skip, postId, postCommentId, cursor }: FindAllPostCommentsDto,
+  //   toUserId?: string,
+  // ) {
+  //   const documents = await this.postCommentModel.aggregate([
+  //     {
+  //       $match: {
+  //         postId: new mongoose.Types.ObjectId(postId),
+  //         ...(postCommentId
+  //           ? {
+  //               postCommentId: new mongoose.Types.ObjectId(postCommentId),
+  //             }
+  //           : {
+  //               postCommentId: { $exists: false },
+  //             }),
+  //         ...(!!cursor
+  //           ? {
+  //               _id: {
+  //                 $gt: new mongoose.Types.ObjectId(cursor),
+  //               },
+  //             }
+  //           : {}),
+  //       },
+  //     },
+  //     {
+  //       $sort: {
+  //         _id: 1,
+  //       },
+  //     },
+  //     {
+  //       $skip: +skip,
+  //     },
+  //     {
+  //       $limit: +limit,
+  //     },
+  //     {
+  //       $set: {
+  //         createdAt: {
+  //           $toDate: '$_id',
+  //         },
+  //       },
+  //     },
+  //     ...(!!toUserId
+  //       ? [
+  //           {
+  //             $lookup: {
+  //               as: 'isLiked',
+  //               foreignField: 'postCommentId',
+  //               from: 'postCommentLikes',
+  //               localField: '_id',
+  //               pipeline: [
+  //                 {
+  //                   $match: {
+  //                     userId: new mongoose.Types.ObjectId(toUserId),
+  //                   },
+  //                 },
+  //               ],
+  //             },
+  //           },
+  //           {
+  //             $set: {
+  //               isLiked: {
+  //                 $cond: {
+  //                   else: false,
+  //                   if: {
+  //                     $ne: ['$isLiked', []],
+  //                   },
+  //                   then: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         ]
+  //       : []),
+  //   ]);
 
-    return [];
-  }
+  //   return [];
+  // }
 
-  async updatePostComment(
-    postCommentId: string,
-    updatePostCommendDto: UpdatePostCommentDto,
-  ) {
-    const document = await this.postCommentModel.findOneAndUpdate(
-      { _id: postCommentId },
-      updatePostCommendDto,
-      { new: true },
-    );
+  // async updatePostComment(
+  //   postCommentId: string,
+  //   updatePostCommendDto: UpdatePostCommentDto,
+  // ) {
+  //   const document = await this.postCommentModel.findOneAndUpdate(
+  //     { _id: postCommentId },
+  //     updatePostCommendDto,
+  //     { new: true },
+  //   );
 
-    if (document) {
-    }
-    return null;
-  }
+  //   if (document) {
+  //   }
+  //   return null;
+  // }
 
-  async deletePostComment(postCommentId: string) {
-    const postComment = await this.postCommentModel.findById(postCommentId);
-    if (!postComment) throw new BadRequestException('Post not found');
+  // async deletePostComment(postCommentId: string) {
+  //   const postComment = await this.postCommentModel.findById(postCommentId);
+  //   if (!postComment) throw new BadRequestException('Post not found');
 
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  //   const session = await this.connection.startSession();
+  //   session.startTransaction();
 
-    try {
-      const result = await this.postCommentModel.deleteOne(
-        {
-          _id: postCommentId,
-        },
-        { session },
-      );
+  //   try {
+  //     const result = await this.postCommentModel.deleteOne(
+  //       {
+  //         _id: postCommentId,
+  //       },
+  //       { session },
+  //     );
 
-      if (result.deletedCount) {
-        await this.postModel.updateOne(
-          { _id: postComment.postId },
-          { $inc: { commentsCount: -1 } },
-          {
-            session,
-          },
-        );
+  //     if (result.deletedCount) {
+  //       await this.postModel.updateOne(
+  //         { _id: postComment.postId },
+  //         { $inc: { commentsCount: -1 } },
+  //         {
+  //           session,
+  //         },
+  //       );
 
-        if (postComment.postCommentId) {
-          await this.postCommentModel.updateOne(
-            { _id: postComment.postCommentId },
-            { $inc: { commentsCount: -1 } },
-            {
-              session,
-            },
-          );
-        }
-      }
+  //       if (postComment.postCommentId) {
+  //         await this.postCommentModel.updateOne(
+  //           { _id: postComment.postCommentId },
+  //           { $inc: { commentsCount: -1 } },
+  //           {
+  //             session,
+  //           },
+  //         );
+  //       }
+  //     }
 
-      await session.commitTransaction();
-    } catch (err) {
-      await session.abortTransaction();
-    } finally {
-      await session.endSession();
-    }
-  }
+  //     await session.commitTransaction();
+  //   } catch (err) {
+  //     await session.abortTransaction();
+  //   } finally {
+  //     await session.endSession();
+  //   }
+  // }
 
-  async createPostCommentLike(filter: {
-    postCommentId: string;
-    userId: string;
-  }) {
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  // async createPostCommentLike(filter: {
+  //   postCommentId: string;
+  //   userId: string;
+  // }) {
+  //   const session = await this.connection.startSession();
+  //   session.startTransaction();
 
-    try {
-      await session.withTransaction(async () => {
-        const document = await this.postCommentLikeModel.findOneAndUpdate(
-          { postCommentId: filter.postCommentId, userId: filter.userId },
-          {},
-          { new: true, session, upsert: true },
-        );
+  //   try {
+  //     await session.withTransaction(async () => {
+  //       const document = await this.postCommentLikeModel.findOneAndUpdate(
+  //         { postCommentId: filter.postCommentId, userId: filter.userId },
+  //         {},
+  //         { new: true, session, upsert: true },
+  //       );
 
-        if (document) {
-          await this.postCommentModel.updateOne(
-            { _id: filter.postCommentId },
-            {
-              $inc: {
-                likesCount: 1,
-              },
-            },
-            {
-              session,
-            },
-          );
-        }
-      });
+  //       if (document) {
+  //         await this.postCommentModel.updateOne(
+  //           { _id: filter.postCommentId },
+  //           {
+  //             $inc: {
+  //               likesCount: 1,
+  //             },
+  //           },
+  //           {
+  //             session,
+  //           },
+  //         );
+  //       }
+  //     });
 
-      await session.commitTransaction();
-    } catch (err) {
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      await session.endSession();
-    }
-  }
+  //     await session.commitTransaction();
+  //   } catch (err) {
+  //     await session.abortTransaction();
+  //     throw err;
+  //   } finally {
+  //     await session.endSession();
+  //   }
+  // }
 
-  async deletePostCommentLike(filter: {
-    postCommentId: string;
-    userId: string;
-  }) {
-    const session = await this.connection.startSession();
+  // async deletePostCommentLike(filter: {
+  //   postCommentId: string;
+  //   userId: string;
+  // }) {
+  //   const session = await this.connection.startSession();
 
-    try {
-      const result = await this.postCommentLikeModel.deleteOne(
-        {
-          postCommentId: filter.postCommentId,
-          userId: filter.userId,
-        },
-        { session },
-      );
+  //   try {
+  //     const result = await this.postCommentLikeModel.deleteOne(
+  //       {
+  //         postCommentId: filter.postCommentId,
+  //         userId: filter.userId,
+  //       },
+  //       { session },
+  //     );
 
-      if (result.deletedCount) {
-        await this.postCommentModel.updateOne(
-          { _id: filter.postCommentId },
-          {
-            $inc: {
-              likesCount: -1,
-            },
-          },
-          {
-            session,
-          },
-        );
-      }
-      await session.commitTransaction();
-    } catch (err) {
-      await session.abortTransaction();
-      throw err;
-    } finally {
-      await session.endSession();
-    }
-  }
+  //     if (result.deletedCount) {
+  //       await this.postCommentModel.updateOne(
+  //         { _id: filter.postCommentId },
+  //         {
+  //           $inc: {
+  //             likesCount: -1,
+  //           },
+  //         },
+  //         {
+  //           session,
+  //         },
+  //       );
+  //     }
+  //     await session.commitTransaction();
+  //   } catch (err) {
+  //     await session.abortTransaction();
+  //     throw err;
+  //   } finally {
+  //     await session.endSession();
+  //   }
+  // }
 }

@@ -7,6 +7,8 @@ import { Upload } from '@aws-sdk/lib-storage';
 // import { getSignedUrl as getCloudfrontSignedUrl } from '@aws-sdk/cloudfront-signer';
 import { getSignedUrl as getS3SignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
+import fs, { read } from 'fs-extra';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { settings } from '@/config/settings';
 
@@ -14,7 +16,9 @@ import { settings } from '@/config/settings';
 export class StorageService {
   private readonly s3Client: S3Client;
 
-  constructor() {
+  constructor(
+    @InjectPinoLogger(StorageService.name) private readonly logger: PinoLogger,
+  ) {
     this.s3Client = new S3Client({
       credentials: {
         accessKeyId: settings.AWS.ACCESS_KEY_ID,
@@ -66,7 +70,24 @@ export class StorageService {
     filePath: string;
     fileKey: string;
     bucket: string;
-  }): Promise<string> {
-    return fileKey;
+  }): Promise<void> {
+    const body = fs.createReadStream(filePath);
+
+    const upload = new Upload({
+      client: this.s3Client,
+      params: {
+        Body: body,
+        Bucket: bucket,
+        Key: fileKey,
+      },
+    });
+
+    upload.on('httpUploadProgress', (progress) => {
+      this.logger.info('upload progress', progress);
+    });
+
+    await upload.done();
+
+    this.logger.info('upload done');
   }
 }

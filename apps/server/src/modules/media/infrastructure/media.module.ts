@@ -3,12 +3,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { MediaService } from '../application/services/media.service';
 import { StorageService } from '../application/services/storage.service';
-import { MediaController } from '../presentation/controllers/media.controller';
 import { Media, MediaSchema } from '../domain/entities/media.entity';
+import { MediaController } from '../presentation/controllers/media.controller';
+import { MediaRepository } from './repositories/media.repository';
 
 @Module({
   controllers: [MediaController],
-  exports: [MediaService, MongooseModule],
+  exports: [MongooseModule, MediaService, StorageService, MediaRepository],
   imports: [
     MongooseModule.forFeature([
       {
@@ -51,6 +52,7 @@ import { Media, MediaSchema } from '../domain/entities/media.entity';
   providers: [
     MediaService,
     StorageService,
+    MediaRepository,
     // TranscodeMediaSubmitProducer,
     // TranscodeMediaCompleteConsumer,
   ],

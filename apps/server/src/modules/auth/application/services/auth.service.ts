@@ -11,7 +11,7 @@ import { settings } from '@/config/settings';
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
-import { User } from '@/modules/users/domain/models/user';
+import { User } from '@/modules/users/domain/models/user.model';
 
 import { SignInDto } from '../../domain/dtos/sign-in.dto';
 import { SignInWithLinkDto } from '../../domain/dtos/sign-in-with-link.dto';
