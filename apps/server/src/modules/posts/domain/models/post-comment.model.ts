@@ -6,6 +6,10 @@ export class PostComment {
   commentsCount: number;
   createdAt: string;
   updatedAt: string;
+
+  constructor(model: PostComment) {
+    Object.assign(this, model);
+  }
 }
 
 export class PostCommentWithViewerData extends PostComment {

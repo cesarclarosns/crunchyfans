@@ -1,5 +1,5 @@
 export class UserNotificationsData {
-  notificationsCount: number;
+  unreadNotificationsCount: number;
 
   constructor(model: UserNotificationsData) {
     Object.assign(this, model);

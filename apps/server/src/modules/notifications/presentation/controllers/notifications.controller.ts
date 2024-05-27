@@ -7,30 +7,46 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { InjectPinoLogger } from 'nestjs-pino';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { CreateNotificationDto } from '../../domain/dtos/create-notification.dto';
-import { UpdateNotificationDto } from '../../domain/dtos/update-notification.dto';
+import { NotificationsService } from '@/modules/notifications/application/services/notifications.service';
+import { CreateNotificationDto } from '@/modules/notifications/domain/dtos/create-notification.dto';
+import { UpdateNotificationDto } from '@/modules/notifications/domain/dtos/update-notification.dto';
+
+/**
+ * POST / create notification
+ * GET / get notifications
+ * GET /:id get notifications
+ * PATCH /:id update notification
+ * DELETE /:id delete notification
+ * GET /unread
+ */
 
 @Controller('notifications')
 export class NotificationsController {
-  constructor() {}
+  constructor(
+    @InjectPinoLogger(NotificationsController.name)
+    private readonly _logger: PinoLogger,
+    private readonly _notificationsService: NotificationsService,
+  ) {}
 
   @Post()
-  create(@Body() createNotificationDto: CreateNotificationDto) {}
+  createNotification(@Body() body: CreateNotificationDto) {}
 
   @Get()
-  findAll() {}
+  getNotifications() {}
 
   @Get(':id')
-  findOne(@Param('id') id: string) {}
+  getNotificationById(@Param('id') id: string) {}
 
   @Patch(':id')
-  update(
+  updateNotification(
     @Param('id') id: string,
-    @Body() updateNotificationDto: UpdateNotificationDto,
+    @Body() body: UpdateNotificationDto,
   ) {}
 
   @Delete(':id')
-  remove(@Param('id') id: string) {}
+  deleteNotification(@Param('id') id: string) {}
+
+  async getUserNotifications() {}
 }

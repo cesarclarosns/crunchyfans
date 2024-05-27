@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { GetUsersProfileBasicDto } from '@/modules/users/domain/dtos/get-users-profile-basic.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
@@ -17,58 +18,73 @@ import { UsersRepository } from '@/modules/users/infrastructure/repositories/use
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectPinoLogger(UsersService.name) private readonly logger: PinoLogger,
-    private readonly eventEmitter: EventEmitter2,
-    private readonly usersRepository: UsersRepository,
+    @InjectPinoLogger(UsersService.name) private readonly _logger: PinoLogger,
+    private readonly _unitOfWork: MongoUnitOfWork,
+    private readonly _eventEmitter: EventEmitter2,
+    private readonly _usersRepository: UsersRepository,
   ) {}
 
   async createUser(create: CreateUserDto): Promise<User> {
-    const user = await this.usersRepository.createUser(create);
+    const dbContext = await this._unitOfWork.start();
 
-    this.eventEmitter.emit(
-      USERS_EVENTS.userCreated,
-      new UserCreatedEvent({ userId: user.id }),
-    );
+    try {
+      const user = await this._usersRepository.createUser(create, dbContext);
 
-    return user;
+      this._eventEmitter.emit(
+        USERS_EVENTS.userCreated,
+        new UserCreatedEvent({ userId: user.id }),
+      );
+
+      await this._unitOfWork.commit(dbContext);
+
+      return user;
+    } catch (error) {
+      await this._unitOfWork.rollback(dbContext);
+      throw error;
+    } finally {
+      await this._unitOfWork.end(dbContext);
+    }
   }
 
   async getUserById(userId: string): Promise<User | null> {
-    return await this.usersRepository.getUserById(userId);
+    const user = await this._usersRepository.getUserById(userId);
+
+    this._logger.debug('getUser done', user);
+    return user;
   }
 
   async getUserByGoogleId(googleId: string): Promise<User | null> {
-    return await this.usersRepository.getUserByGoogleId(googleId);
+    return await this._usersRepository.getUserByGoogleId(googleId);
   }
 
   async getUserByUsername(username: string): Promise<User | null> {
-    return await this.usersRepository.getUserByUsername(username);
+    return await this._usersRepository.getUserByUsername(username);
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    return await this.usersRepository.getUserByEmail(email);
+    return await this._usersRepository.getUserByEmail(email);
   }
 
   async updateUser(
     userId: string,
     update: UpdateUserDto,
   ): Promise<User | null> {
-    return await this.usersRepository.updateUser(userId, update);
+    return await this._usersRepository.updateUser(userId, update);
   }
 
   async deleteUser(userId: string): Promise<User | null> {
-    return await this.usersRepository.deleteUser(userId);
+    return await this._usersRepository.deleteUser(userId);
   }
 
   async getUserData(userId: string): Promise<UserData | null> {
     return null;
-    // return await this.usersRepository.getUserData(userId);
+    // return await this._usersRepository.getUserData(userId);
   }
 
   async getUsersProfileBasic(
     filter: GetUsersProfileBasicDto,
   ): Promise<UserProfileBasic[]> {
-    return await this.usersRepository.getUsersProfileBasic(filter);
+    return await this._usersRepository.getUsersProfileBasic(filter);
   }
 
   async getUserProfileWithViewerDataByUsername(

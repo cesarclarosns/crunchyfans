@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 
-import { MediaType } from '../types/media-type';
+import { MediaType } from '@/modules/media/domain/types/media-type';
 
 @Schema({
   _id: false,

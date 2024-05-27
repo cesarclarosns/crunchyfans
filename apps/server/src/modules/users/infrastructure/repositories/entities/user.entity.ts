@@ -2,9 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Factory } from 'nestjs-seeder';
 
-import { Media } from '@/modules/media/domain/entities/media.entity';
-
-import { UserStatus } from '../../../domain/types/user-status';
+import { UserStatus } from '@/modules/users/domain/types/user-status';
 
 @Schema({
   _id: false,
@@ -12,13 +10,11 @@ import { UserStatus } from '../../../domain/types/user-status';
 })
 class Pictures {
   @Prop({
-    ref: Media.name,
     type: mongoose.Schema.Types.ObjectId,
   })
   profile?: string;
 
   @Prop({
-    ref: Media.name,
     type: mongoose.Schema.Types.ObjectId,
   })
   cover?: string;
@@ -104,9 +100,8 @@ export class User extends Document {
   })
   oauth: OAuth;
 
-  isGay() {
-    return true;
-  }
+  @Prop({ default: false, type: Boolean })
+  isEmailVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

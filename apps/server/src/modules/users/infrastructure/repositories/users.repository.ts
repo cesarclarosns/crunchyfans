@@ -1,8 +1,8 @@
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { isThisMonth } from 'date-fns';
 import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { MongoDBContext } from '@/common/infrastructure/repositories/mongo-unit-of-work';
 import { MediaService } from '@/modules/media/application/services/media.service';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { GetUsersProfileBasicDto } from '@/modules/users/domain/dtos/get-users-profile-basic.dto';
@@ -14,20 +14,22 @@ import {
   UserProfileBasic,
   UserProfileWithViewerData,
 } from '@/modules/users/domain/models/user-profile.model';
-
-import { User as UserEntity } from './entities/user.entity';
+import { User as UserEntity } from '@/modules/users/infrastructure/repositories/entities/user.entity';
 
 export class UsersRepository {
   constructor(
     @InjectPinoLogger(UsersRepository.name)
     private readonly _logger: PinoLogger,
-    private readonly _mediaService: MediaService,
-    @InjectConnection() private readonly _connection: mongoose.Connection,
     @InjectModel(UserEntity.name) private _userModel: Model<UserEntity>,
   ) {}
 
-  async createUser(create: CreateUserDto): Promise<User> {
-    const _user = await this._userModel.create(create);
+  async createUser(
+    create: CreateUserDto,
+    dbContext: MongoDBContext,
+  ): Promise<User> {
+    const [_user] = await this._userModel.insertMany([create], {
+      session: dbContext.session,
+    });
 
     const user = new User(_user.toJSON());
     return user;
@@ -100,6 +102,26 @@ export class UsersRepository {
   }
 
   async getUserDataById(userId: string): Promise<UserData | null> {
+    const _result = await this._userModel.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+      {
+        $lookup: {
+          as: 'pictures.profile',
+          foreignField: 'pictures.profile',
+          from: 'media',
+          localField: '_id',
+        },
+      },
+      {
+        $lookup: {
+          as: 'pictures.cover',
+          foreignField: 'pictures.cover',
+          from: 'media',
+          localField: '_id',
+        },
+      },
+    ]);
+
     const _user = await this._userModel.findOne({
       _id: userId,
     });

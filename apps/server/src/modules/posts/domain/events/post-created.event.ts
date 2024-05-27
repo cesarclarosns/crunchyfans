@@ -1,3 +1,7 @@
 export class PostCreatedEvent {
-  constructor(readonly postId: string) {}
+  postId: string;
+
+  constructor(event: PostCreatedEvent) {
+    Object.assign(this, event);
+  }
 }

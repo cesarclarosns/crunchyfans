@@ -2,7 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Factory } from 'nestjs-seeder';
 
-import { Media } from '@/modules/media/domain/entities/media.entity';
 import { User } from '@/modules/users/infrastructure/repositories/entities/user.entity';
 
 @Schema({ _id: false, versionKey: false })

@@ -17,7 +17,7 @@ import { OptionalAccessTokenGuard } from '../../../auth/application/guards/optio
 import { PostsService } from '../../application/services/posts.service';
 import { CreatePostDto } from '../../domain/dtos/create-post.dto';
 import { CreatePostCommentDto } from '../../domain/dtos/create-post-comment.dto';
-import { FindAllPostCommentsDto } from '../../domain/dtos/find-all-post-comments.dto';
+import { FindAllPostCommentsDto } from '../../domain/dtos/get-post-comments.dto';
 import { FindAllPostsDto } from '../../domain/dtos/find-all-posts.dto';
 import { GetFeedDto } from '../../domain/dtos/get-feed.dto';
 import { UpdatePostDto } from '../../domain/dtos/update-post.dto';

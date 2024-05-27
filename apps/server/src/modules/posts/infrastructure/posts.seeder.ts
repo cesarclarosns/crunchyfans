@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
-import { Media } from '../../media/domain/entities/media.entity';
 import { User } from '../../users/infrastructure/repositories/entities/user.entity';
 import { Post } from '../domain/entities/post.entity';
 import { PostComment } from '../domain/entities/post-comment.entity';
@@ -12,8 +11,9 @@ import { PostComment } from '../domain/entities/post-comment.entity';
 export class PostsSeeder implements Seeder {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
-    @InjectModel(Media.name) private readonly mediaModel: Model<Media>,
     @InjectModel(Post.name) private readonly postModel: Model<Post>,
+    @InjectModel(PostComment.name)
+    private readonly postCommentModel: Model<PostComment>,
   ) {}
 
   async seed() {

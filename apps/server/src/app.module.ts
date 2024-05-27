@@ -5,22 +5,22 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 
-import { settings } from './config/settings';
-import { RedisModule } from './core/redis/redis.module';
-import { AccessTokenGuard } from './modules/auth/application/guards';
-import { AuthModule } from './modules/auth/infrastructure/auth.module';
-import { ChatsModule } from './modules/chats/infrastructure/chats.module';
-import { EmailModule } from './modules/email/infrastructure/email.module';
-import { FollowersModule } from './modules/followers/infrastructure/followers.module';
-import { HealthModule } from './modules/health/infraestructure/health.module';
-import { MediaModule } from './modules/media/infrastructure/media.module';
-import { NotificationsModule } from './modules/notifications/infrastructure/notifications.module';
-import { PaymentsModule } from './modules/payments/infrastructure/payments.module';
-import { PostsModule } from './modules/posts/infrastructure/posts.module';
-import { ReviewsModule } from './modules/reviews/reviews.module';
-import { SocketModule } from './modules/socket/infrastructure/socket.module';
-import { SubscriptionsModule } from './modules/subscriptions/infrastructure/subscriptions.module';
-import { UsersModule } from './modules/users/infrastructure/users.module';
+import { settings } from '@/config/settings';
+import { RedisModule } from '@/core/redis/redis.module';
+import { AccessTokenGuard } from '@/modules/auth/application/guards';
+import { AuthModule } from '@/modules/auth/infrastructure/auth.module';
+import { ChatsModule } from '@/modules/chats/infrastructure/chats.module';
+import { EmailModule } from '@/modules/email/infrastructure/email.module';
+import { FollowersModule } from '@/modules/followers/infrastructure/followers.module';
+import { HealthModule } from '@/modules/health/infrastructure/health.module';
+import { MediaModule } from '@/modules/media/infrastructure/media.module';
+import { NotificationsModule } from '@/modules/notifications/infrastructure/notifications.module';
+import { PaymentsModule } from '@/modules/payments/infrastructure/payments.module';
+import { PostsModule } from '@/modules/posts/infrastructure/posts.module';
+import { ReviewsModule } from '@/modules/reviews/reviews.module';
+import { SocketModule } from '@/modules/socket/infrastructure/socket.module';
+import { SubscriptionsModule } from '@/modules/subscriptions/infrastructure/subscriptions.module';
+import { UsersModule } from '@/modules/users/infrastructure/users.module';
 
 @Module({
   imports: [
@@ -45,7 +45,7 @@ import { UsersModule } from './modules/users/infrastructure/users.module';
       ],
     }),
     MongooseModule.forRoot(settings.DATABASES.MONGODB_URI),
-    RedisModule,
+    // RedisModule,
     UsersModule,
     AuthModule,
     MediaModule,

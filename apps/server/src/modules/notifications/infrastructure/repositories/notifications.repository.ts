@@ -1,13 +1,16 @@
-import { INotificationsRepository } from '@/modules/notifications/domain/interfaces/notifications.repository';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-// export class MongodbNotificationsRepository
-//   implements INotificationsRepository
-// {
-//   constructor() {}
+@Injectable()
+export class NotificationsRepository {
+  constructor(
+    @InjectPinoLogger(NotificationsRepository.name)
+    private readonly _logger: PinoLogger,
+  ) {}
 
-//   createNotification: () => void;
-//   findNotifications: () => void;
-//   findOneNotificationById: (notificationId: string) => void;
-//   updateNotification: () => void;
-//   deleteNotification: (notificationId: string) => void;
-// }
+  async createNotification() {}
+  async updateNotification() {}
+  async getNotificationById() {}
+  async getNotificationsByUserId(userId: string, filter: any) {}
+  async deleteNotification(id: string) {}
+}

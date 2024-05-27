@@ -1,3 +1,3 @@
 export interface IModel {
-  toDto: () => any;
+  toDto: () => unknown;
 }

@@ -23,16 +23,17 @@ import { UpdateMessageDto } from '../../domain/dtos/update-message.dto';
 import { ChatsRepository } from '../../infrastructure/repositories/chats.repository';
 
 /**
- * post /chats create chat
- * get /chats get chats
- * get /chats/:chatId get chat
- * delete /chats/:chatId delete chat
+ * POST /chats create chat
+ * GET /chats get chats
+ * GET /chats/:chatId get chat
+ * DELETE /chats/:chatId delete chat
  *
- * post /chats/:chatId/messages create message
- * post /chats/:chatId/messages/:messageId/read read message
- * get /chats/:chatId/messages
+ * POST /chats/:chatId/messages create message
+ * POST /chats/:chatId/messages/:messageId/read read message
+ * GET /chats/:chatId/messages
  *
- * post /chats/massive-message
+ * GET /chats/user-chats
+ * POST /chats/massive-message
  *
  */
 

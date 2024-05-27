@@ -1,33 +1,30 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { MediaService } from '../../../media/application/services/media.service';
-import { UsersService } from '../../../users/application/services/users.service';
-import { ChatDto } from '../../domain/dtos/chat.dto';
-import { CreateChatDto } from '../../domain/dtos/create-chat.dto';
-import { CreateMassiveMessageDto } from '../../domain/dtos/create-massive-message.dto';
-import { CreateMessageDto } from '../../domain/dtos/create-message.dto';
-import { MessageDto } from '../../domain/dtos/message.dto';
-import { UpdateChatDto } from '../../domain/dtos/update-chat.dto';
-import { UpdateMessageDto } from '../../domain/dtos/update-message.dto';
-import { Chat, Message } from '../../domain/models';
-import { ChatsRepository } from '../../infrastructure/repositories/chats.repository';
-import { CHATS_EVENTS, MessageCreatedEvent } from '../events';
-import { MessageReadEvent } from '../events/message-read.event';
+import { CreateChatDto } from '@/modules/chats/domain/dtos/create-chat.dto';
+import { CreateMessageDto } from '@/modules/chats/domain/dtos/create-message.dto';
+import {
+  CHATS_EVENTS,
+  MessageCreatedEvent,
+} from '@/modules/chats/domain/events';
+import { Chat, Message } from '@/modules/chats/domain/models';
+import { ChatsRepository } from '@/modules/chats/infrastructure/repositories/chats.repository';
+import { MediaService } from '@/modules/media/application/services/media.service';
+import { UsersService } from '@/modules/users/application/services/users.service';
 
 @Injectable()
 export class ChatsService {
   constructor(
-    @InjectPinoLogger(ChatsService.name) private readonly logger: PinoLogger,
-    private readonly eventEmitter: EventEmitter2,
-    private readonly chatsRepository: ChatsRepository,
+    @InjectPinoLogger(ChatsService.name) private readonly _logger: PinoLogger,
+    private readonly _eventEmitter: EventEmitter2,
+    private readonly _chatsRepository: ChatsRepository,
+    private readonly _mediaService: MediaService,
+    private readonly _usersService: UsersService,
   ) {}
 
   async createChat(create: CreateChatDto): Promise<Chat> {
-    return await this.chatsRepository.createChat(create);
+    return await this._chatsRepository.createChat(create);
   }
 
   // async findAllChats(
@@ -214,15 +211,16 @@ export class ChatsService {
 
   //   return results.at(0);
   // }
+  async markMessageAsPurchased() {}
+
+  async markMessageAsRead() {}
 
   async createMessage(create: CreateMessageDto): Promise<Message> {
-    const message = await this.chatsRepository.createMessage(create);
+    const message = await this._chatsRepository.createMessage(create);
 
-    // Emit events
-    this.eventEmitter.emit(
-      CHATS_EVENTS.MessageCreated,
+    this._eventEmitter.emit(
+      CHATS_EVENTS.messageCreated,
       new MessageCreatedEvent({
-        chatId: message.chatId,
         messageId: message.id,
       }),
     );

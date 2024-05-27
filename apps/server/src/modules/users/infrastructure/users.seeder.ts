@@ -4,9 +4,8 @@ import argon2 from 'argon2';
 import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
+import { Media } from '@/modules/media/infrastructure/repositories/entities/media.entity';
 import { User } from '@/modules/users/infrastructure/repositories/entities/user.entity';
-
-import { Media } from '../../media/domain/entities/media.entity';
 
 @Injectable()
 export class UsersSeeder implements Seeder {

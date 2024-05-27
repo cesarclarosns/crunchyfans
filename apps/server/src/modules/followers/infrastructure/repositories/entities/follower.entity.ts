@@ -15,12 +15,4 @@ export class Follower {
 
 export const FollowerSchema = SchemaFactory.createForClass(Follower);
 
-export interface IFollower {
-  followerId: string;
-  followeeId: string;
-}
-
-export interface IUserFollowersData {
-  userId: string;
-  followersCount: number;
-}
+FollowerSchema.index({ followeeId: 1, followerId: 1 }, { unique: true });

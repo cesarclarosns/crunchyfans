@@ -325,6 +325,6 @@ export class ChatsRepository {
       },
     ]);
 
-    return new UserChatsData({ unreadChatsCount: 1 });
+    return new UserChatsData({ unreadChats: [], unreadChatsCount: 1 });
   }
 }

@@ -1,23 +1,22 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
-import { MediaModule } from '@/modules/media/infrastructure/media.module';
-import { UsersModule } from '@/modules/users/infrastructure/users.module';
-
 import {
   AccessTokenGuard,
   GoogleGuard,
   RefreshTokenGuard,
-} from '../application/guards';
-import { AuthService } from '../application/services/auth.service';
-import { PasswordService } from '../application/services/password.service';
-import { TokensService } from '../application/services/tokens.service';
+} from '@/modules/auth/application/guards';
+import { AuthService } from '@/modules/auth/application/services/auth.service';
+import { PasswordService } from '@/modules/auth/application/services/password.service';
+import { TokensService } from '@/modules/auth/application/services/tokens.service';
 import {
   AccessTokenStrategy,
   GoogleStrategy,
   RefreshTokenStrategy,
-} from '../application/strategies';
-import { AuthController } from '../presentation/controllers/auth.controller';
+} from '@/modules/auth/application/strategies';
+import { AuthController } from '@/modules/auth/presentation/controllers/auth.controller';
+import { MediaModule } from '@/modules/media/infrastructure/media.module';
+import { UsersModule } from '@/modules/users/infrastructure/users.module';
 
 @Module({
   controllers: [AuthController],

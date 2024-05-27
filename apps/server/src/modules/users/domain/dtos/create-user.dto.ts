@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class PicturesDto {
   @IsOptional()
@@ -53,6 +59,10 @@ export class CreateUserDto {
   pictures?: PicturesDto;
 
   oauth?: OAuthDto;
+
+  @IsOptional()
+  @IsBoolean()
+  isEmailVerified: boolean;
 
   constructor({ oauth, pictures, ...partial }: Partial<CreateUserDto>) {
     Object.assign(this, partial);

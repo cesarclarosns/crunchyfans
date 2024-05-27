@@ -1,11 +1,9 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { useContainer } from 'class-validator';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import mongoose from 'mongoose';
 import { Logger } from 'nestjs-pino';
 
 import { RedisIoAdapter } from '@/common/application/libs/adapters/reids-io.adapter';
@@ -68,11 +66,6 @@ async function bootstrap() {
     bufferLogs: true,
   });
 
-  app.connectMicroservice<MicroserviceOptions>({
-    options: { host: 'localhost', port: settings.API.LISTENING_PORT },
-    transport: Transport.TCP,
-  });
-
   // Set cors
   setCors(app);
 
@@ -100,7 +93,6 @@ async function bootstrap() {
   // Start app
   app.setGlobalPrefix(settings.API.PREFIX);
 
-  await app.startAllMicroservices();
   await app.listen(settings.API.LISTENING_PORT);
 }
 bootstrap();

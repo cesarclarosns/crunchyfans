@@ -1,27 +1,23 @@
-import { IModel } from '@/common/domain/model';
-
 import { MediaType } from '../types/media-type';
 
-export class Media implements IModel {
+export class Media {
   id: string;
   userId: string;
   type: MediaType;
+  source: string;
+  thubmnail: string;
+  preview: string;
+  sources: Record<string, string>;
   processing: {
     fileKey: string;
     needsThumbnail: boolean;
     needsPreview: boolean;
     needsWatermark: boolean;
   };
-  sources: Record<string, string>;
-  source: string;
-  thubmnail: string;
-  preview: string;
   isReady: boolean;
   hasError: boolean;
 
   constructor(model: Media) {
     Object.assign(model, this);
   }
-
-  toDto() {}
 }

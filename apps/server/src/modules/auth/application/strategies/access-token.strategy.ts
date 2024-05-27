@@ -3,9 +3,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { settings } from '@/config/settings';
-
-import { AUTH_STRATEGIES } from '../../domain/constants/auth-strategies';
-import { TokenPayload } from '../../domain/types/token-payload';
+import { AUTH_STRATEGIES } from '@/modules/auth/domain/constants/auth-strategies';
+import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(

@@ -15,16 +15,16 @@ import { MEDIA_EVENTS, MediaCreatedEvent } from '../../domain/events';
 @Injectable()
 export class MediaService {
   constructor(
-    @InjectPinoLogger(MediaService.name) private readonly logger: PinoLogger,
-    private readonly eventEmitter: EventEmitter2,
-    private readonly storageService: StorageService,
-    private readonly mediaRepository: MediaRepository,
+    @InjectPinoLogger(MediaService.name) private readonly _logger: PinoLogger,
+    private readonly _eventEmitter: EventEmitter2,
+    private readonly _storageService: StorageService,
+    private readonly _mediaRepository: MediaRepository,
   ) {}
 
   async createMedia(create: CreateMediaDto) {
-    const media = await this.mediaRepository.createMedia(create);
+    const media = await this._mediaRepository.createMedia(create);
 
-    this.eventEmitter.emit(
+    this._eventEmitter.emit(
       MEDIA_EVENTS.mediaCreated,
       new MediaCreatedEvent({ mediaId: media.id }),
     );
@@ -33,28 +33,28 @@ export class MediaService {
   }
 
   async getMedias(filter: GetMediasDto) {
-    return await this.mediaRepository.getMedias(filter);
+    return await this._mediaRepository.getMedias(filter);
   }
 
   async getMediaById(mediaId: string) {
-    return await this.mediaRepository.getMediaById(mediaId);
+    return await this._mediaRepository.getMediaById(mediaId);
   }
 
   async updateMedia(mediaId: string, update: UpdateMediaDto) {
-    return await this.mediaRepository.updateMedia(mediaId, update);
+    return await this._mediaRepository.updateMedia(mediaId, update);
   }
 
   async deleteMedia(mediaId: string) {
-    return await this.mediaRepository.deleteMedia(mediaId);
+    return await this._mediaRepository.deleteMedia(mediaId);
   }
 
-  async addDownloadUrlsToMedia(media: Media) {
+  async addDownloadUrlsToMedia(media: Media): Promise<void> {
     const promises: Promise<void>[] = [];
 
     if (media.source)
       promises.push(
         (async () => {
-          media.source = await this.storageService.createDownloadUrl({
+          media.source = await this._storageService.createDownloadUrl({
             bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
             fileKey: media.source,
           });
@@ -64,7 +64,7 @@ export class MediaService {
     if (media.thubmnail)
       promises.push(
         (async () => {
-          media.thubmnail = await this.storageService.createDownloadUrl({
+          media.thubmnail = await this._storageService.createDownloadUrl({
             bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
             fileKey: media.thubmnail,
           });
@@ -74,7 +74,7 @@ export class MediaService {
     if (media.preview)
       promises.push(
         (async () => {
-          media.preview = await this.storageService.createDownloadUrl({
+          media.preview = await this._storageService.createDownloadUrl({
             bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
             fileKey: media.preview,
           });
@@ -85,7 +85,7 @@ export class MediaService {
       Object.keys(media.sources).forEach((key) => {
         promises.push(
           (async () => {
-            media.sources[key] = await this.storageService.createDownloadUrl({
+            media.sources[key] = await this._storageService.createDownloadUrl({
               bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
               fileKey: media.sources[key],
             });
