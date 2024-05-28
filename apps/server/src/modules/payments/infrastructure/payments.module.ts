@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { UsersModule } from '../../users/infrastructure/users.module';
+import { UsersModule } from '../../users/users.module';
 import { PaymentsService } from '../application/services/payments.service';
 import {
   BillingAccount,

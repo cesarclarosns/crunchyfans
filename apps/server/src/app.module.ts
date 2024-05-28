@@ -16,11 +16,11 @@ import { HealthModule } from '@/modules/health/infrastructure/health.module';
 import { MediaModule } from '@/modules/media/infrastructure/media.module';
 import { NotificationsModule } from '@/modules/notifications/infrastructure/notifications.module';
 import { PaymentsModule } from '@/modules/payments/infrastructure/payments.module';
-import { PostsModule } from '@/modules/posts/infrastructure/posts.module';
+import { PostsModule } from '@/modules/posts/posts.module';
 import { ReviewsModule } from '@/modules/reviews/reviews.module';
 import { SocketModule } from '@/modules/socket/infrastructure/socket.module';
 import { SubscriptionsModule } from '@/modules/subscriptions/infrastructure/subscriptions.module';
-import { UsersModule } from '@/modules/users/infrastructure/users.module';
+import { UsersModule } from '@/modules/users/users.module';
 
 @Module({
   imports: [

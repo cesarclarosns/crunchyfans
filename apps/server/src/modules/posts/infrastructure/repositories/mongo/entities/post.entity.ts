@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { Factory } from 'nestjs-seeder';
 
-import { User } from '@/modules/users/infrastructure/repositories/entities/user.entity';
+import { User } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 
 @Schema({ _id: false, versionKey: false })
 class PostMedia {

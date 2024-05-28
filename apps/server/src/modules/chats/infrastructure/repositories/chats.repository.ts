@@ -1,7 +1,8 @@
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { MongoDBContext } from '@/common/infrastructure/repositories/mongo-unit-of-work';
 import { CreateChatDto } from '@/modules/chats/domain/dtos/create-chat.dto';
 import { CreateMessageDto } from '@/modules/chats/domain/dtos/create-message.dto';
 import { GetChatsDto } from '@/modules/chats/domain/dtos/get-chats.dto';
@@ -21,57 +22,48 @@ import {
   UserChatsData,
   UserMessage,
 } from '@/modules/chats/domain/models';
-import { StorageService } from '@/modules/media/application/services/storage.service';
 
 export class ChatsRepository {
   constructor(
-    @InjectPinoLogger(ChatsRepository.name) private readonly logger: PinoLogger,
-    private readonly storageService: StorageService,
-    @InjectConnection() private readonly connection: mongoose.Connection,
-    @InjectModel(ChatEntity.name) private readonly chatModel: Model<ChatEntity>,
+    @InjectPinoLogger(ChatsRepository.name)
+    private readonly _logger: PinoLogger,
+    @InjectModel(ChatEntity.name)
+    private readonly _chatModel: Model<ChatEntity>,
     @InjectModel(MessageEntity.name)
-    private readonly messageModel: Model<MessageEntity>,
+    private readonly _messageModel: Model<MessageEntity>,
     @InjectModel(UserChatEntity.name)
-    private readonly userChatModel: Model<UserChatEntity>,
+    private readonly _userChatModel: Model<UserChatEntity>,
     @InjectModel(UserMessageEntity.name)
-    private readonly userMessageModel: Model<UserMessageEntity>,
+    private readonly _userMessageModel: Model<UserMessageEntity>,
   ) {}
 
-  async createChat(create: CreateChatDto): Promise<Chat> {
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  async createChat(
+    create: CreateChatDto,
+    dbContext: MongoDBContext,
+  ): Promise<Chat> {
+    const [_chat] = await this._chatModel.insertMany([create], {
+      session: dbContext.session,
+    });
 
-    try {
-      const chatDocument = await this.chatModel.create(create);
+    await this._userChatModel.insertMany(
+      create.participants.map((userId) => ({
+        chatId: _chat.id,
+        userId,
+      })),
+      {
+        session: dbContext.session,
+      },
+    );
 
-      const userChatsDocuments = await this.userChatModel.insertMany(
-        create.participants.map((userId) => ({
-          chatId: chatDocument.id,
-          userId,
-        })),
-      );
-
-      await session.commitTransaction();
-
-      this.logger.debug('createChat', {
-        chatDocument,
-        userChatsDocuments,
-      });
-
-      return new Chat(chatDocument.toJSON());
-    } catch (error) {
-      this.logger.error(error);
-
-      await session.abortTransaction();
-      throw error;
-    }
+    const chat = new Chat(_chat.toJSON());
+    return chat;
   }
 
   async getChatsWithViewerData(
     filter: GetChatsDto,
     viewerId: string,
   ): Promise<ChatWithViewerData[]> {
-    const aggregateResults = await this.chatModel.aggregate([
+    const aggregate = await this._chatModel.aggregate([
       {
         $match: {
           participants: {
@@ -100,7 +92,7 @@ export class ChatsRepository {
       },
     ]);
 
-    const chatsWithViewerData: ChatWithViewerData[] = aggregateResults.map(
+    const chatsWithViewerData: ChatWithViewerData[] = aggregate.map(
       (result) => {
         const chat = JSON.parse(JSON.stringify(result)) as {
           id: string;
@@ -139,14 +131,14 @@ export class ChatsRepository {
   }
 
   async getChatById(chatId: string): Promise<Chat | null> {
-    const chatDocument = await this.chatModel.findById(chatId);
+    const chatDocument = await this._chatModel.findById(chatId);
     if (!chatDocument) return null;
 
     return new Chat(chatDocument.toJSON());
   }
 
   async getChatWithViewerData(chatId: string, viewerId: string) {
-    const aggregateResults = await this.chatModel.aggregate([
+    const aggregate = await this._chatModel.aggregate([
       {
         $match: {
           _id: new mongoose.Types.ObjectId(chatId),
@@ -173,122 +165,75 @@ export class ChatsRepository {
   }
 
   async deleteChat(chatId: string, userId: string): Promise<UserChat | null> {
-    const chatDocument = await this.chatModel.findById(chatId);
-    if (!chatDocument) return null;
+    const _chat = await this._chatModel.findById(chatId);
+    if (!_chat) return null;
 
-    const userChatDocument = await this.userChatModel.findOneAndUpdate(
+    const _userChat = await this._userChatModel.findOneAndUpdate(
       { chatId, userId },
-      { lastDeletedMessageId: chatDocument!.lastMessageId },
+      { lastDeletedMessageId: _chat.lastMessageId },
       { new: true, upsert: true },
     );
 
-    return new UserChat(userChatDocument.toJSON());
+    const userChat = new UserChat(_userChat.toJSON());
+    return userChat;
   }
 
-  async createMessage(create: CreateMessageDto) {
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  async createMessage(create: CreateMessageDto, dbContext: MongoDBContext) {
+    const [messageDocument] = await this._messageModel.insertMany([create], {
+      session: dbContext.session,
+    });
 
-    try {
-      const [messageDocument] = await this.messageModel.insertMany([create], {
-        session,
-      });
+    await this._chatModel.updateOne(
+      { _id: create.chatId },
+      { lastMessageId: messageDocument._id, lastSenderId: create.userId },
+      {
+        session: dbContext.session,
+      },
+    );
 
-      await this.chatModel.updateOne(
-        { _id: create.chatId },
-        { lastMessageId: messageDocument._id, lastSenderId: create.userId },
-        {
-          session,
-        },
-      );
-
-      await session.commitTransaction();
-
-      return new Message(messageDocument.toJSON());
-    } catch (error) {
-      this.logger.error('createMessage', error);
-
-      await session.abortTransaction();
-      throw error;
-    }
+    const message = new Message(messageDocument.toJSON());
+    return message;
   }
 
   async getMessagesWithViewerData(filter: GetMessagesDto, viewerId: string) {}
 
   async getMessage(messageId: string): Promise<Message | null> {
-    const messageDocument = await this.messageModel.findById(messageId);
-    if (!messageDocument) return null;
+    const _message = await this._messageModel.findById(messageId);
+    if (!_message) return null;
 
-    return new Message(messageDocument.toJSON());
+    const message = new Message(_message.toJSON());
+    return message;
   }
 
   async getMessageWithViewerData(messageId: string, viewerId: string) {}
 
   async updateMessage(messageId: string, update: UpdateMessageDto) {
-    const messageDocument = await this.messageModel.findOneAndUpdate(
+    const _message = await this._messageModel.findOneAndUpdate(
       { _id: messageId },
       { $set: update },
       { new: true },
     );
-    if (!messageDocument) return null;
+    if (!_message) return null;
 
-    return new Message(messageDocument.toJSON());
+    const message = new Message(_message.toJSON());
+    return message;
   }
 
   async deleteMessage(messageId: string): Promise<Message | null> {
-    const messageDocument = await this.messageModel.findOneAndDelete(
+    const _message = await this._messageModel.findOneAndDelete(
       {
         _id: messageId,
       },
       { new: true },
     );
-    if (!messageDocument) return null;
+    if (!_message) return null;
 
-    return new Message(messageDocument.toJSON());
-  }
-
-  async markMessageAsRead(
-    messageId: string,
-    userId: string,
-  ): Promise<UserChat | null> {
-    const messageDocument = await this.messageModel.findById(messageId);
-    if (!messageDocument) return null;
-
-    const userChatDocument = await this.userChatModel.findOneAndUpdate(
-      {
-        chatId: messageDocument.chatId,
-        userId,
-      },
-      {
-        lastReadMessageId: messageId,
-      },
-      {
-        new: true,
-        upsert: true,
-      },
-    );
-
-    return new UserChat(userChatDocument.toJSON());
-  }
-
-  async markMessageAsPurchased(
-    messageId: string,
-    userId: string,
-  ): Promise<UserMessage> {
-    const userMessageDocument = await this.userMessageModel.findOneAndUpdate(
-      { messageId, userId },
-      { $set: { isPurchased: true } },
-      {
-        new: true,
-        upsert: true,
-      },
-    );
-
-    return new UserMessage(userMessageDocument.toJSON());
+    const message = new Message(_message.toJSON());
+    return message;
   }
 
   async getUserChatsData(userId: string): Promise<UserChatsData | null> {
-    const aggregateResult = await this.chatModel.aggregate([
+    const aggregateResult = await this._chatModel.aggregate([
       {
         $match: {
           lastSenderId: {
@@ -326,5 +271,47 @@ export class ChatsRepository {
     ]);
 
     return new UserChatsData({ unreadChats: [], unreadChatsCount: 1 });
+  }
+
+  async setMessageAsRead(
+    messageId: string,
+    userId: string,
+  ): Promise<UserChat | null> {
+    const _message = await this._messageModel.findById(messageId);
+    if (!_message) return null;
+
+    const _userChat = await this._userChatModel.findOneAndUpdate(
+      {
+        chatId: _message.chatId,
+        userId,
+      },
+      {
+        lastReadMessageId: messageId,
+      },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
+
+    const userChat = new UserChat(_userChat.toJSON());
+    return userChat;
+  }
+
+  async setMessageAsPurchased(
+    messageId: string,
+    userId: string,
+  ): Promise<UserMessage | null> {
+    const _userMessage = await this._userMessageModel.findOneAndUpdate(
+      { messageId, userId },
+      { $set: { isPurchased: true } },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
+
+    const userMessage = new UserMessage(_userMessage.toJSON());
+    return userMessage;
   }
 }

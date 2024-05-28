@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Seeder } from 'nestjs-seeder';
 
 import { Media as MediaEntity } from '@/modules/media/infrastructure/repositories/entities/media.entity';
-import { User as UserEntity } from '@/modules/users/infrastructure/repositories/entities/user.entity';
+import { User as UserEntity } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 
 @Injectable()
 export class MediaSeeder implements Seeder {

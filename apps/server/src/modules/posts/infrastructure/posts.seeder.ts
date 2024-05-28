@@ -3,9 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
-import { User } from '../../users/infrastructure/repositories/entities/user.entity';
-import { Post } from '../domain/entities/post.entity';
-import { PostComment } from '../domain/entities/post-comment.entity';
+import { User } from '../../users/infrastructure/repositories/mongo/entities/user.entity';
+import { Post } from './repositories/mongo/entities/post.entity';
+import { PostComment } from './repositories/mongo/entities/post-comment.entity';
 
 @Injectable()
 export class PostsSeeder implements Seeder {

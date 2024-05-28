@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
-import { User } from '@/modules/users/infrastructure/repositories/entities/user.entity';
+import { User } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 
 import { Chat } from '../domain/entities/chat.entity';
 import { Message } from '../domain/entities/message.entity';

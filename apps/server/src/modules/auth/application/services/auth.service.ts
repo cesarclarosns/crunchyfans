@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,41 +7,40 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { URL } from 'url';
 
 import { settings } from '@/config/settings';
+import { PasswordService } from '@/modules/auth/application/services/password.service';
+import { TokensService } from '@/modules/auth/application/services/tokens.service';
+import { SignInDto } from '@/modules/auth/domain/dtos/sign-in.dto';
+import { SignInWithLinkDto } from '@/modules/auth/domain/dtos/sign-in-with-link.dto';
+import { SignInWithLinkConsumeDto } from '@/modules/auth/domain/dtos/sign-in-with-link-consume.dto';
+import { SignUpDto } from '@/modules/auth/domain/dtos/sign-up.dto';
+import { UpdatePasswordDto } from '@/modules/auth/domain/dtos/update-password.dto';
+import {
+  AUTH_EVENTS,
+  UserRequestedLinkToSignInEvent,
+} from '@/modules/auth/domain/events';
+import { Tokens } from '@/modules/auth/domain/models/tokens';
+import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
 import { User } from '@/modules/users/domain/models/user.model';
 
-import { SignInDto } from '../../domain/dtos/sign-in.dto';
-import { SignInWithLinkDto } from '../../domain/dtos/sign-in-with-link.dto';
-import { SignInWithLinkConsumeDto } from '../../domain/dtos/sign-in-with-link-consume.dto';
-import { SignUpDto } from '../../domain/dtos/sign-up.dto';
-import { UpdatePasswordDto } from '../../domain/dtos/update-password.dto';
-import {
-  AUTH_EVENTS,
-  UserRequestedLinkToSignInEvent,
-} from '../../domain/events';
-import { Tokens } from '../../domain/models/tokens';
-import { TokenPayload } from '../../domain/types/token-payload';
-import { PasswordService } from './password.service';
-import { TokensService } from './tokens.service';
-
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly eventEmitter: EventEmitter2,
-    private readonly usersService: UsersService,
-    private readonly passwordService: PasswordService,
-    private readonly tokensService: TokensService,
+    private readonly _eventEmitter: EventEmitter2,
+    private readonly _usersService: UsersService,
+    private readonly _passwordService: PasswordService,
+    private readonly _tokensService: TokensService,
   ) {}
 
   async signIn(signInDto: SignInDto): Promise<Tokens> {
-    const user = await this.usersService.getUserByEmail(signInDto.email);
+    const user = await this._usersService.getUserByEmail(signInDto.email);
     if (!user) {
       throw new UnauthorizedException('Email is not registered');
     }
 
-    const isPasswordValid = await this.passwordService.verifyPassword(
+    const isPasswordValid = await this._passwordService.verifyPassword(
       user.hashedPassword,
       signInDto.password,
     );
@@ -50,21 +48,21 @@ export class AuthService {
       throw new UnauthorizedException('Password is incorrect.');
     }
 
-    const tokens = await this.tokensService.refreshTokens(user.id);
+    const tokens = await this._tokensService.refreshTokens(user.id);
     return tokens;
   }
 
   async signUp(signUpDto: SignUpDto): Promise<User> {
     const [userByEmail, userByUsername] = await Promise.all([
-      this.usersService.getUserByEmail(signUpDto.email),
-      this.usersService.getUserByUsername(signUpDto.username),
+      this._usersService.getUserByEmail(signUpDto.email),
+      this._usersService.getUserByUsername(signUpDto.username),
     ]);
 
     if (userByEmail || userByUsername) {
       throw new BadRequestException('Email or username is already taken.');
     }
 
-    const newUser = await this.usersService.createUser(
+    const newUser = await this._usersService.createUser(
       new CreateUserDto({ ...signUpDto }),
     );
 
@@ -72,19 +70,19 @@ export class AuthService {
   }
 
   async signInWithLink(dto: SignInWithLinkDto) {
-    const user = await this.usersService.getUserById(dto.email);
+    const user = await this._usersService.getUserById(dto.email);
     if (!user) {
       throw new UnauthorizedException('Email is not registered');
     }
 
-    const token = await this.tokensService.createLinkToken({
+    const token = await this._tokensService.createLinkToken({
       sub: user.id,
     } satisfies TokenPayload);
 
     const url = new URL('/', settings.APP.DOMAIN);
     url.searchParams.set('token', token);
 
-    this.eventEmitter.emit(
+    this._eventEmitter.emit(
       AUTH_EVENTS.userRequestedLinkToSignIn,
       new UserRequestedLinkToSignInEvent({
         email: dto.email,
@@ -97,19 +95,19 @@ export class AuthService {
   }
 
   async signInWithLinkConsume(dto: SignInWithLinkConsumeDto) {
-    const payload = (await this.tokensService.verifyLinkToken(
+    const payload = (await this._tokensService.verifyLinkToken(
       dto.token,
     )) as TokenPayload;
 
-    return await this.tokensService.refreshTokens(payload.sub);
+    return await this._tokensService.refreshTokens(payload.sub);
   }
 
   async updateUserPassword(userId: string, dto: UpdatePasswordDto) {
-    const newHashedPassword = await this.passwordService.createPasswordHash(
+    const newHashedPassword = await this._passwordService.createPasswordHash(
       dto.password,
     );
 
-    return await this.usersService.updateUser(
+    return await this._usersService.updateUser(
       userId,
       new UpdateUserDto({ hashedPassword: newHashedPassword }),
     );

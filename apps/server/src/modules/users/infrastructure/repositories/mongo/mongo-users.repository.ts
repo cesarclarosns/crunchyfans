@@ -1,34 +1,32 @@
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { MongoDBContext } from '@/common/infrastructure/repositories/mongo-unit-of-work';
-import { MediaService } from '@/modules/media/application/services/media.service';
+import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { GetUsersProfileBasicDto } from '@/modules/users/domain/dtos/get-users-profile-basic.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
 import { User } from '@/modules/users/domain/models/user.model';
 import { UserData } from '@/modules/users/domain/models/user-data.model';
 import {
-  UserProfile,
   UserProfileBasic,
   UserProfileWithViewerData,
 } from '@/modules/users/domain/models/user-profile.model';
-import { User as UserEntity } from '@/modules/users/infrastructure/repositories/entities/user.entity';
+import { IUsersRepository } from '@/modules/users/domain/repositories/users.repository';
+import { User as UserEntity } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 
-export class UsersRepository {
+@Injectable()
+export class MongoUsersRepository implements IUsersRepository {
   constructor(
-    @InjectPinoLogger(UsersRepository.name)
+    @InjectPinoLogger(MongoUsersRepository.name)
     private readonly _logger: PinoLogger,
     @InjectModel(UserEntity.name) private _userModel: Model<UserEntity>,
   ) {}
 
-  async createUser(
-    create: CreateUserDto,
-    dbContext: MongoDBContext,
-  ): Promise<User> {
+  async createUser(create: CreateUserDto, uow: MongoUnitOfWork): Promise<User> {
     const [_user] = await this._userModel.insertMany([create], {
-      session: dbContext.session,
+      session: uow._dbContext.session,
     });
 
     const user = new User(_user.toJSON());
@@ -102,7 +100,7 @@ export class UsersRepository {
   }
 
   async getUserDataById(userId: string): Promise<UserData | null> {
-    const _result = await this._userModel.aggregate([
+    const [_userData] = await this._userModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(userId) } },
       {
         $lookup: {
@@ -121,23 +119,9 @@ export class UsersRepository {
         },
       },
     ]);
+    if (!_userData) return null;
 
-    const _user = await this._userModel.findOne({
-      _id: userId,
-    });
-    if (!_user) return null;
-
-    const user = new User({ ..._user.toJSON() });
-
-    const userData = new UserData({
-      chatsData: {} as any,
-      id: user.id,
-      name: user.name,
-      notificationsData: {} as any,
-      pictures: {} as any,
-      username: user.username,
-    });
-
+    const userData = new UserData(JSON.parse(JSON.stringify(_userData)));
     return userData;
   }
 
@@ -170,14 +154,18 @@ export class UsersRepository {
       },
     ]);
 
-    return [];
+    const usersProfileBasic = _usersProfileBasic.map(
+      (_userProfileBasic) =>
+        new UserProfileBasic(JSON.parse(JSON.stringify(_userProfileBasic))),
+    );
+    return usersProfileBasic;
   }
 
   async getUserProfileWithViewerDataByUsername(
     username: string,
     viewerId: string,
   ): Promise<UserProfileWithViewerData | null> {
-    const _userProfile = await this._userModel.aggregate([
+    const [_userProfileWithViewerData] = await this._userModel.aggregate([
       { $match: { username } },
       {
         $lookup: {
@@ -228,7 +216,7 @@ export class UsersRepository {
           pipeline: [
             {
               $match: {
-                subscriberId: viewerId,
+                subscriberId: new mongoose.Types.ObjectId(viewerId),
               },
             },
           ],
@@ -243,7 +231,7 @@ export class UsersRepository {
           pipeline: [
             {
               $match: {
-                followerId: viewerId,
+                followerId: new mongoose.Types.ObjectId(viewerId),
               },
             },
           ],
@@ -251,6 +239,11 @@ export class UsersRepository {
       },
     ]);
 
-    return null;
+    if (!_userProfileWithViewerData) return null;
+
+    const userProfileWithViewerData = new UserProfileWithViewerData(
+      JSON.parse(JSON.stringify(_userProfileWithViewerData)),
+    );
+    return userProfileWithViewerData;
   }
 }

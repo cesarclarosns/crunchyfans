@@ -3,35 +3,34 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { IUnitOfWork } from '@/common/domain/repositories/unit-of-work';
-import {
-  MongoDBContext,
-  MongoUnitOfWork,
-} from '@/common/infrastructure/repositories/mongo-unit-of-work';
+import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
 import { MediaService } from '@/modules/media/application/services/media.service';
 import { MediaRepository } from '@/modules/media/infrastructure/repositories/media.repository';
 import { CreatePostDto } from '@/modules/posts/domain/dtos/create-post.dto';
 import { CreatePostCommentDto } from '@/modules/posts/domain/dtos/create-post-comment.dto';
+import { GetPostsDto } from '@/modules/posts/domain/dtos/get-posts.dto';
 import { UpdatePostDto } from '@/modules/posts/domain/dtos/update-post.dto';
 import { UpdatePostCommentDto } from '@/modules/posts/domain/dtos/update-post-comment.dto';
+import {
+  Post,
+  PostComment,
+  PostCommentWithViewerData,
+  PostWithViewerData,
+  UserPost,
+} from '@/modules/posts/domain/models';
+import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
 import {
   Post as PostEntity,
   PostComment as PostCommentEntity,
   UserPost as UserPostEntity,
   UserPostComment as UserPostCommentEntity,
   UserPostsData as UserPostsDataEntity,
-} from '@/modules/posts/domain/entities';
-import {
-  Post,
-  PostComment,
-  PostCommentWithViewerData,
-  PostWithViewerData,
-} from '@/modules/posts/domain/models';
+} from '@/modules/posts/infrastructure/repositories/mongo/entities';
 
 @Injectable()
-export class PostsRepository {
+export class MongoPostsRepository implements IPostsRepository {
   constructor(
-    @InjectPinoLogger(PostsRepository.name)
+    @InjectPinoLogger(MongoPostsRepository.name)
     private readonly _logger: PinoLogger,
     private readonly _mediaRepository: MediaRepository,
     @InjectModel(PostEntity.name)
@@ -46,13 +45,7 @@ export class PostsRepository {
     private readonly _userPostsDataModel: Model<UserPostsDataEntity>,
   ) {}
 
-  async createPost(
-    create: CreatePostDto,
-    dbContext: MongoDBContext,
-  ): Promise<Post> {
-    if (!dbContext.session.inTransaction()) {
-    }
-
+  async createPost(create: CreatePostDto, uow: MongoUnitOfWork): Promise<Post> {
     // Get medias
     const medias = await this._mediaRepository.getMedias({
       ids: create.medias.map((media) => media.mediaId),
@@ -65,13 +58,13 @@ export class PostsRepository {
       },
       { postsCount: { $inc: 1 } },
       {
-        session: dbContext.session,
+        session: uow._dbContext.session,
         upsert: true,
       },
     );
 
     const [_post] = await this._postModel.insertMany([create], {
-      session: dbContext.session,
+      session: uow._dbContext.session,
     });
 
     const post = new Post(_post.toJSON());
@@ -79,7 +72,7 @@ export class PostsRepository {
   }
 
   async getPostsWithViewerData(
-    filter: any,
+    filter: GetPostsDto,
     viewerId: string,
   ): Promise<PostWithViewerData[]> {
     console.log(filter, viewerId);
@@ -169,7 +162,7 @@ export class PostsRepository {
 
   async deletePostComment(
     postCommentId: string,
-    dbContext: MongoDBContext,
+    uow: MongoUnitOfWork,
   ): Promise<PostComment | null> {
     const _postComment =
       await this._postCommentModel.findByIdAndDelete(postCommentId);
@@ -179,8 +172,8 @@ export class PostsRepository {
     return postComment;
   }
 
-  async setPostAsLiked(postId: string, userId: string): Promise<void> {
-    return;
+  async setPostAsLiked(postId: string, userId: string): Promise<UserPost> {
+    throw new Error();
   }
 
   // async setPostAsLiked(postId: string, userId: string): Promise<void> {
@@ -212,9 +205,27 @@ export class PostsRepository {
   //   ]);
   // }
 
-  async unsetPostAsLiked(postId: string, userId: string): Promise<void> {}
+  async unsetPostAsLiked(
+    postId: string,
+    userId: string,
+    uow: MongoUnitOfWork,
+  ): Promise<UserPost> {
+    throw new Error();
+  }
 
-  async setPostAsPurchased(postId: string, userId: string): Promise<void> {}
+  async setPostAsPurchased(
+    postId: string,
+    userId: string,
+    uow: MongoUnitOfWork,
+  ): Promise<UserPost> {
+    throw new Error();
+  }
 
-  async unsetPostAsPurchased(postId: string, userId: string) {}
+  async unsetPostAsPurchased(
+    postId: string,
+    userId: string,
+    uow: MongoUnitOfWork,
+  ): Promise<UserPost> {
+    throw new Error();
+  }
 }

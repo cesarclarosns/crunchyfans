@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { IUnitOfWork } from '@/common/domain/repositories/unit-of-work';
+import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work';
 import { MediaModule } from '@/modules/media/infrastructure/media.module';
 import { PostsService } from '@/modules/posts/application/services/posts.service';
+import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
 import {
   Post,
   PostComment,
@@ -14,12 +17,13 @@ import {
   UserPostSchema,
   UserPostsData,
   UserPostsDataSchema,
-} from '@/modules/posts/domain/entities';
+} from '@/modules/posts/infrastructure/repositories/mongo/entities';
+import { MongoPostsRepository } from '@/modules/posts/infrastructure/repositories/mongo/mongo-posts.repository';
 import { PostsController } from '@/modules/posts/presentation/controllers/posts.controller';
 
 @Module({
   controllers: [PostsController],
-  exports: [PostsService],
+  exports: [PostsService, IPostsRepository],
   imports: [
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
@@ -39,6 +43,10 @@ import { PostsController } from '@/modules/posts/presentation/controllers/posts.
     ]),
     MediaModule,
   ],
-  providers: [PostsService],
+  providers: [
+    PostsService,
+    { provide: IPostsRepository, useClass: MongoPostsRepository },
+    { provide: IUnitOfWork, useClass: MongoUnitOfWork },
+  ],
 })
 export class PostsModule {}

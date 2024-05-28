@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -12,27 +13,26 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
+import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
+
 import { Public } from '../../../auth/application/decorators/public.decorator';
 import { OptionalAccessTokenGuard } from '../../../auth/application/guards/optional-access-token.guard';
 import { PostsService } from '../../application/services/posts.service';
 import { CreatePostDto } from '../../domain/dtos/create-post.dto';
 import { CreatePostCommentDto } from '../../domain/dtos/create-post-comment.dto';
-import { FindAllPostCommentsDto } from '../../domain/dtos/get-post-comments.dto';
-import { FindAllPostsDto } from '../../domain/dtos/find-all-posts.dto';
 import { GetFeedDto } from '../../domain/dtos/get-feed.dto';
+import { FindAllPostCommentsDto } from '../../domain/dtos/get-post-comments.dto';
+import { FindAllPostsDto } from '../../domain/dtos/get-posts.dto';
 import { UpdatePostDto } from '../../domain/dtos/update-post.dto';
 import { UpdatePostCommentDto } from '../../domain/dtos/update-post-comment.dto';
 
-/**
- * POST /
- * GET /
- * GET /:id
- *
- */
-
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    @Inject(IPostsRepository)
+    private readonly _postsRepository: IPostsRepository,
+    private readonly postsService: PostsService,
+  ) {}
 
   // @Post()
   // async createPost(@Req() req: Request, @Body() createPostDto: CreatePostDto) {

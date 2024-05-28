@@ -2,7 +2,6 @@ import { UserFollowersData } from '@/modules/followers/domain/models/user-follow
 import { Media } from '@/modules/media/domain/models/media.model';
 import { UserPostsData } from '@/modules/posts/domain/models/user-posts-data.model';
 import { UserSubscriptionsData } from '@/modules/subscriptions/domain/entities/user-subscriptions-data.entity';
-import { Subscription } from '@/modules/subscriptions/domain/models/subscription.model';
 
 export class UserProfileBasic {
   id: string;
@@ -30,8 +29,8 @@ export class UserProfile extends UserProfileBasic {
 }
 
 export class UserProfileWithViewerData extends UserProfile {
-  subscription: Subscription | null;
-  isFollowing: boolean;
+  subscription: unknown;
+  following: unknown;
 
   constructor(model: UserProfileWithViewerData) {
     super(model);

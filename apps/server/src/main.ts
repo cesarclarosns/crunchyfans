@@ -6,15 +6,14 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 
+import { AppModule } from '@/app.module';
 import { RedisIoAdapter } from '@/common/application/libs/adapters/reids-io.adapter';
 import { CorsExceptionFilter } from '@/common/application/libs/filters/cors-exception.filter';
 import { MongooseExceptionFilter } from '@/common/application/libs/filters/mongoose-exception.filter';
 import { CorsError } from '@/common/domain/errors/cors.error';
+import { settings } from '@/config/settings';
 import { AUTH_COOKIES } from '@/modules/auth/domain/constants/auth-cookies';
 import { AUTH_TOKENS } from '@/modules/auth/domain/constants/auth-tokens';
-
-import { AppModule } from './app.module';
-import { settings } from './config/settings';
 
 // mongoose.set('debug', true);
 

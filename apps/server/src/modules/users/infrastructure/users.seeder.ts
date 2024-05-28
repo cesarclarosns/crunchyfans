@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
 import { Media } from '@/modules/media/infrastructure/repositories/entities/media.entity';
-import { User } from '@/modules/users/infrastructure/repositories/entities/user.entity';
+import { User } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 
 @Injectable()
 export class UsersSeeder implements Seeder {
