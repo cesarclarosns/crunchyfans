@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { URL } from 'url';
 
 import { settings } from '@/config/settings';
@@ -23,11 +24,12 @@ import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
-import { User } from '@/modules/users/domain/models/user.model';
+import { User } from '@/modules/users/domain/entities/user.model';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectPinoLogger(AuthService.name) private readonly _logger: PinoLogger,
     private readonly _eventEmitter: EventEmitter2,
     private readonly _usersService: UsersService,
     private readonly _passwordService: PasswordService,

@@ -6,7 +6,7 @@ import { settings } from '@/config/settings';
 import { Tokens } from '@/modules/auth/domain/models/tokens';
 import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { UsersService } from '@/modules/users/application/services/users.service';
-import { User } from '@/modules/users/domain/models/user.model';
+import { User } from '@/modules/users/domain/entities/user.model';
 
 @Injectable()
 export class TokensService {

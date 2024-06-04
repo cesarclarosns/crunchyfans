@@ -11,27 +11,19 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { PostsService } from '@/modules/posts/application/services/posts.service';
 import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
-
-import { Public } from '../../../auth/application/decorators/public.decorator';
-import { OptionalAccessTokenGuard } from '../../../auth/application/guards/optional-access-token.guard';
-import { PostsService } from '../../application/services/posts.service';
-import { CreatePostDto } from '../../domain/dtos/create-post.dto';
-import { CreatePostCommentDto } from '../../domain/dtos/create-post-comment.dto';
-import { GetFeedDto } from '../../domain/dtos/get-feed.dto';
-import { FindAllPostCommentsDto } from '../../domain/dtos/get-post-comments.dto';
-import { FindAllPostsDto } from '../../domain/dtos/get-posts.dto';
-import { UpdatePostDto } from '../../domain/dtos/update-post.dto';
-import { UpdatePostCommentDto } from '../../domain/dtos/update-post-comment.dto';
 
 @Controller('posts')
 export class PostsController {
   constructor(
+    @InjectPinoLogger(PostsController.name)
+    private readonly _logger: PinoLogger,
     @Inject(IPostsRepository)
     private readonly _postsRepository: IPostsRepository,
-    private readonly postsService: PostsService,
+    private readonly _postsService: PostsService,
   ) {}
 
   // @Post()

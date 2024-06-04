@@ -15,55 +15,42 @@ import {
 
 export interface IPostsRepository {
   createPost: (create: CreatePostDto, uow: IUnitOfWork) => Promise<Post>;
-
   getPostsWithViewerData: (
     filter: GetPostsDto,
     viewerId: string,
   ) => Promise<PostWithViewerData[]>;
-
   getPostById: (postId: string) => Promise<Post | null>;
-
   updatePost: (postId: string, update: UpdatePostDto) => Promise<Post | null>;
-
   deletePost: (postId: string) => Promise<Post | null>;
-
   createPostComment: (create: CreatePostCommentDto) => Promise<PostComment>;
-
   getPostCommentsWithViewerData: (
     filter: GetPostCommentsDto,
     viewerId: string,
   ) => Promise<PostCommentWithViewerData[]>;
-
   getPostCommentById: (postCommentId: string) => Promise<PostComment | null>;
-
   updatePostComment: (
     postCommentId: string,
     update: UpdatePostCommentDto,
   ) => Promise<PostComment | null>;
-
   deletePostComment: (
     postCommentId: string,
     uow: IUnitOfWork,
   ) => Promise<PostComment | null>;
-
   setPostAsLiked: (
     postId: string,
     userId: string,
     uow: IUnitOfWork,
   ) => Promise<UserPost>;
-
   unsetPostAsLiked: (
     postId: string,
     userId: string,
     uow: IUnitOfWork,
   ) => Promise<UserPost>;
-
   setPostAsPurchased: (
     postId: string,
     userId: string,
     uow: IUnitOfWork,
   ) => Promise<UserPost>;
-
   unsetPostAsPurchased: (
     postId: string,
     userId: string,

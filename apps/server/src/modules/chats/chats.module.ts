@@ -1,6 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
+import { MongoUnitOfWorkFactory } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
 import { ChatsService } from '@/modules/chats/application/services/chats.service';
 import {
   Chat,
@@ -11,12 +13,13 @@ import {
   UserChatSchema,
   UserMessage,
   UserMessageSchema,
-} from '@/modules/chats/domain/entities';
-import { ChatsController } from '@/modules/chats/presentation/controllers/chats.controller';
-import { MediaModule } from '@/modules/media/infrastructure/media.module';
-import { UsersModule } from '@/modules/users/infrastructure/users.module';
+} from '@/modules/chats/infrastructure/repositories/mongo/entities';
+import { MediaModule } from '@/modules/media/media.module';
+import { UsersModule } from '@/modules/users/users.module';
 
-import { ChatsRepository } from './repositories/chats.repository';
+import { IChatsRepository } from './domain/repositories/chats.repository';
+import { MongoChatsRepository } from './infrastructure/repositories/mongo/mongo-chats.repository';
+import { ChatsController } from './presentation/controllers/chats.controller';
 
 @Module({
   controllers: [ChatsController],
@@ -43,6 +46,13 @@ import { ChatsRepository } from './repositories/chats.repository';
     MediaModule,
     forwardRef(() => UsersModule),
   ],
-  providers: [ChatsService, ChatsRepository],
+  providers: [
+    ChatsService,
+    { provide: IChatsRepository, useClass: MongoChatsRepository },
+    {
+      provide: IUnitOfWorkFactory,
+      useClass: MongoUnitOfWorkFactory,
+    },
+  ],
 })
 export class ChatsModule {}

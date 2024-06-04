@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { MediaService } from '../application/services/media.service';
-import { StorageService } from '../application/services/storage.service';
-import { MediaController } from '../presentation/controllers/media.controller';
-import { Media, MediaSchema } from './repositories/entities/media.entity';
-import { MediaRepository } from './repositories/media.repository';
+import { MediaService } from './application/services/media.service';
+import { StorageService } from './application/services/storage.service';
+import {
+  Media,
+  MediaSchema,
+} from './infrastructure/repositories/entities/media.entity';
+import { MediaRepository } from './infrastructure/repositories/media.repository';
+import { MediaController } from './presentation/controllers/media.controller';
 
 @Module({
   controllers: [MediaController],

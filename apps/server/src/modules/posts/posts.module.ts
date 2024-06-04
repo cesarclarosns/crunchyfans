@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { IUnitOfWork } from '@/common/domain/repositories/unit-of-work';
-import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work';
-import { MediaModule } from '@/modules/media/infrastructure/media.module';
+import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
+import { MongoUnitOfWorkFactory } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
+import { MediaModule } from '@/modules/media/media.module';
 import { PostsService } from '@/modules/posts/application/services/posts.service';
 import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
 import {
@@ -45,8 +45,8 @@ import { PostsController } from '@/modules/posts/presentation/controllers/posts.
   ],
   providers: [
     PostsService,
+    { provide: IUnitOfWorkFactory, useClass: MongoUnitOfWorkFactory },
     { provide: IPostsRepository, useClass: MongoPostsRepository },
-    { provide: IUnitOfWork, useClass: MongoUnitOfWork },
   ],
 })
 export class PostsModule {}

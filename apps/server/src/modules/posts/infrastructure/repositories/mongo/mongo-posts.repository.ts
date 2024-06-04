@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
-import { MediaService } from '@/modules/media/application/services/media.service';
 import { MediaRepository } from '@/modules/media/infrastructure/repositories/media.repository';
 import { CreatePostDto } from '@/modules/posts/domain/dtos/create-post.dto';
 import { CreatePostCommentDto } from '@/modules/posts/domain/dtos/create-post-comment.dto';

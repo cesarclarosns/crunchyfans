@@ -7,12 +7,12 @@ import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { GetUsersProfileBasicDto } from '@/modules/users/domain/dtos/get-users-profile-basic.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
-import { User } from '@/modules/users/domain/models/user.model';
-import { UserData } from '@/modules/users/domain/models/user-data.model';
+import { UserData } from '@/modules/users/domain/entities/user-data.model';
 import {
   UserProfileBasic,
   UserProfileWithViewerData,
-} from '@/modules/users/domain/models/user-profile.model';
+} from '@/modules/users/domain/entities/user-profile.model';
+import { User } from '@/modules/users/domain/models/user';
 import { IUsersRepository } from '@/modules/users/domain/repositories/users.repository';
 import { User as UserEntity } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 

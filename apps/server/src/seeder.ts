@@ -3,14 +3,14 @@ import { LoggerModule } from 'nestjs-pino';
 import { seeder } from 'nestjs-seeder';
 
 import { settings } from '@/config/settings';
-import { ChatsModule } from '@/modules/chats/infrastructure/chats.module';
+import { ChatsModule } from '@/modules/chats/chats.module';
 import { ChatsSeeder } from '@/modules/chats/presentation/chats.seeder';
-import { MediaModule } from '@/modules/media/infrastructure/media.module';
 import { MediaSeeder } from '@/modules/media/infrastructure/media.seeder';
-import { PostsModule } from '@/modules/posts/infrastructure/posts.module';
+import { MediaModule } from '@/modules/media/media.module';
 import { PostsSeeder } from '@/modules/posts/infrastructure/posts.seeder';
-import { UsersModule } from '@/modules/users/infrastructure/users.module';
+import { PostsModule } from '@/modules/posts/posts.module';
 import { UsersSeeder } from '@/modules/users/infrastructure/users.seeder';
+import { UsersModule } from '@/modules/users/users.module';
 
 seeder({
   imports: [

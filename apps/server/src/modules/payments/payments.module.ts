@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { UsersModule } from '../../users/users.module';
-import { PaymentsService } from '../application/services/payments.service';
+import { UsersModule } from '../users/users.module';
+import { PaymentsService } from './application/services/payments.service';
 import {
   BillingAccount,
   BillingAccountSchema,
-} from '../domain/entities/billing.entity';
-import { Payment, PaymentSchema } from '../domain/entities/payment.entity';
-import { PaymentsController } from '../presentation/controllers/payments.controller';
+} from './domain/entities/billing.entity';
+import { Payment, PaymentSchema } from './domain/entities/payment.entity';
+import { PaymentsController } from './presentation/controllers/payments.controller';
 
 @Module({
   controllers: [PaymentsController],

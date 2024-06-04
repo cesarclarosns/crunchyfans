@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { createClient } from 'redis';
+import { Redis } from 'ioredis';
 
 import { settings } from '@/config/settings';
 
+export type RedisClient = Redis;
 export const RedisClient = Symbol('RedisClient');
 
 @Module({
@@ -12,9 +13,9 @@ export const RedisClient = Symbol('RedisClient');
     {
       provide: RedisClient,
       useFactory: async () => {
-        const client = createClient({ url: settings.DATABASES.REDIS_URL });
-        await client.connect();
-        return client;
+        const redis = new Redis(settings.DATABASES.REDIS_URL);
+        await redis.connect();
+        return redis;
       },
     },
   ],

@@ -1,19 +1,15 @@
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { MongoDBContext } from '@/common/infrastructure/repositories/mongo-unit-of-work';
+import { IUnitOfWork } from '@/common/domain/repositories/unit-of-work.factory';
+import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
 import { CreateChatDto } from '@/modules/chats/domain/dtos/create-chat.dto';
 import { CreateMessageDto } from '@/modules/chats/domain/dtos/create-message.dto';
 import { GetChatsDto } from '@/modules/chats/domain/dtos/get-chats.dto';
 import { GetMessagesDto } from '@/modules/chats/domain/dtos/get-messages.dto';
 import { UpdateMessageDto } from '@/modules/chats/domain/dtos/update-message.dto';
-import {
-  Chat as ChatEntity,
-  Message as MessageEntity,
-  UserChat as UserChatEntity,
-  UserMessage as UserMessageEntity,
-} from '@/modules/chats/domain/entities';
 import {
   Chat,
   ChatWithViewerData,
@@ -22,10 +18,19 @@ import {
   UserChatsData,
   UserMessage,
 } from '@/modules/chats/domain/models';
+import { MessageWithViewerData } from '@/modules/chats/domain/models/message.model';
+import { IChatsRepository } from '@/modules/chats/domain/repositories/chats.repository';
+import {
+  Chat as ChatEntity,
+  Message as MessageEntity,
+  UserChat as UserChatEntity,
+  UserMessage as UserMessageEntity,
+} from '@/modules/chats/infrastructure/repositories/mongo/entities';
 
-export class ChatsRepository {
+@Injectable()
+export class MongoChatsRepository implements IChatsRepository {
   constructor(
-    @InjectPinoLogger(ChatsRepository.name)
+    @InjectPinoLogger(MongoChatsRepository.name)
     private readonly _logger: PinoLogger,
     @InjectModel(ChatEntity.name)
     private readonly _chatModel: Model<ChatEntity>,
@@ -37,12 +42,9 @@ export class ChatsRepository {
     private readonly _userMessageModel: Model<UserMessageEntity>,
   ) {}
 
-  async createChat(
-    create: CreateChatDto,
-    dbContext: MongoDBContext,
-  ): Promise<Chat> {
+  async createChat(create: CreateChatDto, uow: MongoUnitOfWork): Promise<Chat> {
     const [_chat] = await this._chatModel.insertMany([create], {
-      session: dbContext.session,
+      session: uow._dbContext.session,
     });
 
     await this._userChatModel.insertMany(
@@ -51,7 +53,7 @@ export class ChatsRepository {
         userId,
       })),
       {
-        session: dbContext.session,
+        session: uow._dbContext.session,
       },
     );
 
@@ -137,7 +139,10 @@ export class ChatsRepository {
     return new Chat(chatDocument.toJSON());
   }
 
-  async getChatWithViewerData(chatId: string, viewerId: string) {
+  async getChatWithViewerDataById(
+    chatId: string,
+    viewerId: string,
+  ): Promise<ChatWithViewerData | null> {
     const aggregate = await this._chatModel.aggregate([
       {
         $match: {
@@ -162,6 +167,8 @@ export class ChatsRepository {
         },
       },
     ]);
+
+    return null;
   }
 
   async deleteChat(chatId: string, userId: string): Promise<UserChat | null> {
@@ -178,16 +185,16 @@ export class ChatsRepository {
     return userChat;
   }
 
-  async createMessage(create: CreateMessageDto, dbContext: MongoDBContext) {
+  async createMessage(create: CreateMessageDto, uow: MongoUnitOfWork) {
     const [messageDocument] = await this._messageModel.insertMany([create], {
-      session: dbContext.session,
+      session: uow._dbContext.session,
     });
 
     await this._chatModel.updateOne(
       { _id: create.chatId },
       { lastMessageId: messageDocument._id, lastSenderId: create.userId },
       {
-        session: dbContext.session,
+        session: uow._dbContext.session,
       },
     );
 
@@ -195,17 +202,21 @@ export class ChatsRepository {
     return message;
   }
 
-  async getMessagesWithViewerData(filter: GetMessagesDto, viewerId: string) {}
+  async getMessagesWithViewerData(filter: GetMessagesDto, viewerId: string) {
+    return [];
+  }
 
-  async getMessage(messageId: string): Promise<Message | null> {
+  async getMessageById(messageId: string): Promise<Message | null> {
     const _message = await this._messageModel.findById(messageId);
     if (!_message) return null;
 
-    const message = new Message(_message.toJSON());
+    const message = new MessageWithViewerData(_message.toJSON());
     return message;
   }
 
-  async getMessageWithViewerData(messageId: string, viewerId: string) {}
+  async getMessageWithViewerDataById(messageId: string, viewerId: string) {
+    return null;
+  }
 
   async updateMessage(messageId: string, update: UpdateMessageDto) {
     const _message = await this._messageModel.findOneAndUpdate(
@@ -298,6 +309,12 @@ export class ChatsRepository {
     return userChat;
   }
 
+  unsetMessageAsRead: (
+    messageId: string,
+    userId: string,
+    uow: IUnitOfWork,
+  ) => Promise<UserChat | null>;
+
   async setMessageAsPurchased(
     messageId: string,
     userId: string,
@@ -314,4 +331,10 @@ export class ChatsRepository {
     const userMessage = new UserMessage(_userMessage.toJSON());
     return userMessage;
   }
+
+  unsetMessageAsPurchased: (
+    messageId: string,
+    userId: string,
+    uow: IUnitOfWork,
+  ) => Promise<UserMessage | null>;
 }

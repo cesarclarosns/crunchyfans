@@ -20,7 +20,6 @@ import { GetChatsDto } from '../../domain/dtos/get-chats.dto';
 import { GetMessagesDto } from '../../domain/dtos/get-messages.dto';
 import { UpdateChatDto } from '../../domain/dtos/update-chat.dto';
 import { UpdateMessageDto } from '../../domain/dtos/update-message.dto';
-import { ChatsRepository } from '../../infrastructure/repositories/chats.repository';
 
 /**
  * POST /chats
@@ -43,7 +42,6 @@ export class ChatsController {
     @InjectPinoLogger(ChatsController.name)
     private readonly _logger: PinoLogger,
     private readonly _chatsService: ChatsService,
-    private readonly _chatsRepository: ChatsRepository,
   ) {}
 
   @Post()
@@ -54,14 +52,10 @@ export class ChatsController {
   @Get()
   async getChats(@Req() req: Request, @Query() query: GetChatsDto) {
     const userId = req.user.sub;
-
-    return await this._chatsRepository.getChatsWithViewerData(query, userId);
   }
 
   @Get(':chatId')
-  async getChatById(@Req() req: Request, @Param('chatId') chatId: string) {
-    return await this._chatsRepository.getChatById(chatId);
-  }
+  async getChatById(@Req() req: Request, @Param('chatId') chatId: string) {}
 
   @Patch(':chatId')
   async updateChat(

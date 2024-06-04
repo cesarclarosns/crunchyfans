@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
 import { CreateChatDto } from '@/modules/chats/domain/dtos/create-chat.dto';
 import { CreateMessageDto } from '@/modules/chats/domain/dtos/create-message.dto';
 import {
@@ -9,7 +10,7 @@ import {
   MessageCreatedEvent,
 } from '@/modules/chats/domain/events';
 import { Chat, Message } from '@/modules/chats/domain/models';
-import { ChatsRepository } from '@/modules/chats/infrastructure/repositories/chats.repository';
+import { IChatsRepository } from '@/modules/chats/domain/repositories/chats.repository';
 import { MediaService } from '@/modules/media/application/services/media.service';
 import { UsersService } from '@/modules/users/application/services/users.service';
 
@@ -18,13 +19,32 @@ export class ChatsService {
   constructor(
     @InjectPinoLogger(ChatsService.name) private readonly _logger: PinoLogger,
     private readonly _eventEmitter: EventEmitter2,
-    private readonly _chatsRepository: ChatsRepository,
+    @Inject(IChatsRepository)
+    private readonly _chatsRepository: IChatsRepository,
+    @Inject(IUnitOfWorkFactory)
+    private readonly _unitOfWorkFactory: IUnitOfWorkFactory,
     private readonly _mediaService: MediaService,
     private readonly _usersService: UsersService,
   ) {}
 
   async createChat(create: CreateChatDto): Promise<Chat> {
-    return await this._chatsRepository.createChat(create);
+    const uow = this._unitOfWorkFactory.create();
+
+    try {
+      await uow.start();
+
+      const chat = await this._chatsRepository.createChat(create, uow);
+
+      await uow.commit();
+
+      return chat;
+    } catch (error) {
+      uow.rollback();
+
+      throw error;
+    } finally {
+      uow.end();
+    }
   }
 
   // async findAllChats(
@@ -216,15 +236,27 @@ export class ChatsService {
   async markMessageAsRead() {}
 
   async createMessage(create: CreateMessageDto): Promise<Message> {
-    const message = await this._chatsRepository.createMessage(create);
+    const uow = this._unitOfWorkFactory.create();
+    await uow.start();
 
-    this._eventEmitter.emit(
-      CHATS_EVENTS.messageCreated,
-      new MessageCreatedEvent({
-        messageId: message.id,
-      }),
-    );
+    try {
+      const message = await this._chatsRepository.createMessage(create, uow);
 
-    return message;
+      this._eventEmitter.emit(
+        CHATS_EVENTS.messageCreated,
+        new MessageCreatedEvent({
+          messageId: message.id,
+        }),
+      );
+
+      await uow.commit();
+
+      return message;
+    } catch (error) {
+      await uow.rollback();
+      throw error;
+    } finally {
+      await uow.end();
+    }
   }
 }

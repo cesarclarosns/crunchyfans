@@ -5,8 +5,8 @@ import { DataFactory, Seeder } from 'nestjs-seeder';
 
 import { User } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 
-import { Chat } from '../domain/entities/chat.entity';
-import { Message } from '../domain/entities/message.entity';
+import { Chat } from '../infrastructure/repositories/mongo/entities/chat.entity';
+import { Message } from '../infrastructure/repositories/mongo/entities/message.entity';
 
 @Injectable()
 export class ChatsSeeder implements Seeder {

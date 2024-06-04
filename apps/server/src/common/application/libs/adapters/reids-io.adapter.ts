@@ -2,7 +2,7 @@ import { INestApplicationContext } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { createAdapter } from '@socket.io/redis-streams-adapter';
 import jwt from 'jsonwebtoken';
-import { createClient, createCluster } from 'redis';
+import { createClient } from 'redis';
 import { ServerOptions } from 'socket.io';
 
 import { CorsError } from '@/common/domain/errors/cors.error';

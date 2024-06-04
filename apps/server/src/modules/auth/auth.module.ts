@@ -15,8 +15,8 @@ import {
   RefreshTokenStrategy,
 } from '@/modules/auth/application/strategies';
 import { AuthController } from '@/modules/auth/presentation/controllers/auth.controller';
-import { MediaModule } from '@/modules/media/infrastructure/media.module';
-import { UsersModule } from '@/modules/users/infrastructure/users.module';
+import { MediaModule } from '@/modules/media/media.module';
+import { UsersModule } from '@/modules/users/users.module';
 
 @Module({
   controllers: [AuthController],
