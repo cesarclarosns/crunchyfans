@@ -5,8 +5,6 @@ import mongoose, { Model, set } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import Stripe from 'stripe';
 
-import { settings } from '@/config/settings';
-
 import { UsersService } from '../../../users/application/services/users.service';
 import { BillingDto } from '../../domain/dtos/billing.dto';
 import { CreatePaymentDto } from '../../domain/dtos/create-payment.dto';

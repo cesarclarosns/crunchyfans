@@ -11,14 +11,14 @@ import { RedisIoAdapter } from '@/common/application/libs/adapters/reids-io.adap
 import { CorsExceptionFilter } from '@/common/application/libs/filters/cors-exception.filter';
 import { MongooseExceptionFilter } from '@/common/application/libs/filters/mongoose-exception.filter';
 import { CorsError } from '@/common/domain/errors/cors.error';
-import { settings } from '@/config/settings';
+import { appSettings, corsSettings } from '@/config';
 import { AUTH_COOKIES } from '@/modules/auth/domain/constants/auth-cookies';
 import { AUTH_TOKENS } from '@/modules/auth/domain/constants/auth-tokens';
 
 // mongoose.set('debug', true);
 
 function setCors(app: INestApplication) {
-  const allowedOrigins = settings.CORS.ALLOWED_ORIGINS.split(',');
+  const allowedOrigins = corsSettings.ALLOWED_ORIGINS.split(',');
 
   app.enableCors({
     credentials: true,
@@ -57,7 +57,11 @@ function setSwagger(app: INestApplication) {
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup(`${settings.API.PREFIX}/docs`, app, swaggerDocument);
+  SwaggerModule.setup(
+    `${appSettings.API_ROOT_PATH}/docs`,
+    app,
+    swaggerDocument,
+  );
 }
 
 async function bootstrap() {
@@ -90,8 +94,8 @@ async function bootstrap() {
   setSwagger(app);
 
   // Start app
-  app.setGlobalPrefix(settings.API.PREFIX);
+  app.setGlobalPrefix(appSettings.API_ROOT_PATH);
 
-  await app.listen(settings.API.LISTENING_PORT);
+  await app.listen(appSettings.API_PORT);
 }
 bootstrap();

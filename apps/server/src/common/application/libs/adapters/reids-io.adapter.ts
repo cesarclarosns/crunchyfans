@@ -6,7 +6,12 @@ import { createClient } from 'redis';
 import { ServerOptions } from 'socket.io';
 
 import { CorsError } from '@/common/domain/errors/cors.error';
-import { settings } from '@/config/settings';
+import {
+  authSettings,
+  corsSettings,
+  databaseSettings,
+  socketSettings,
+} from '@/config';
 import { AUTH_TOKENS } from '@/modules/auth/domain/constants/auth-tokens';
 import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { CustomServer } from '@/modules/socket/domain/types/socket';
@@ -20,7 +25,7 @@ export class RedisIoAdapter extends IoAdapter {
 
   async connectToRedis(): Promise<void> {
     const redisClient = createClient({
-      url: settings.DATABASES.REDIS_URL,
+      url: databaseSettings.REDIS_URL,
     });
     await redisClient.connect();
     this.adapater = createAdapter(redisClient);
@@ -29,7 +34,7 @@ export class RedisIoAdapter extends IoAdapter {
   createIOServer(port: number, options?: ServerOptions): any {
     if (options) {
       // Set cors
-      const allowedOrigins = settings.CORS.ALLOWED_ORIGINS.split(',');
+      const allowedOrigins = corsSettings.ALLOWED_ORIGINS.split(',');
       options.cors = {
         origin: (origin, cb) => {
           if (allowedOrigins.indexOf(origin!) !== -1 || !origin) {
@@ -40,7 +45,7 @@ export class RedisIoAdapter extends IoAdapter {
       };
 
       options.transports = ['websocket'];
-      options.path = settings.SOCKET.PATH;
+      options.path = socketSettings.SOCKET_ROOT_PATH;
     }
 
     // Create server
@@ -55,7 +60,7 @@ export class RedisIoAdapter extends IoAdapter {
 
         socket.data = jwt.verify(
           accessToken,
-          settings.AUTH.JWT_ACCESS_SECRET,
+          authSettings.JWT_ACCESS_SECRET,
         ) as TokenPayload;
 
         next();

@@ -15,8 +15,6 @@ import {
 import { Request } from 'express';
 import Stripe from 'stripe';
 
-import { settings } from '@/config/settings';
-
 import { stripe } from '../../application/libs/stripe';
 import { PaymentsService } from '../../application/services/payments.service';
 import { CreatePaymentDto } from '../../domain/dtos/create-payment.dto';

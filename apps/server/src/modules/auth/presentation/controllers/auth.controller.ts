@@ -25,7 +25,7 @@ import {
 import { Request, Response } from 'express';
 
 import { BadRequestResponseBodyDto } from '@/common/domain/dtos/bad-request-reponse-body.dto';
-import { settings } from '@/config/settings';
+import { appSettings } from '@/config';
 import { Public } from '@/modules/auth/application/decorators/public.decorator';
 import { RefreshTokenGuard } from '@/modules/auth/application/guards';
 import { GoogleGuard } from '@/modules/auth/application/guards/google.guard';
@@ -179,7 +179,7 @@ export class AuthController {
       secure: true,
     });
 
-    const url = settings.APP.DOMAIN;
+    const url = appSettings.APP_DOMAIN;
     res.redirect(url);
   }
 }

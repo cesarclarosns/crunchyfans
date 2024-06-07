@@ -2,7 +2,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { LoggerModule } from 'nestjs-pino';
 import { seeder } from 'nestjs-seeder';
 
-import { settings } from '@/config/settings';
+import { databaseSettings } from '@/config';
 import { ChatsModule } from '@/modules/chats/chats.module';
 import { ChatsSeeder } from '@/modules/chats/presentation/chats.seeder';
 import { MediaSeeder } from '@/modules/media/infrastructure/media.seeder';
@@ -21,7 +21,7 @@ seeder({
         },
       },
     }),
-    MongooseModule.forRoot(settings.DATABASES.MONGODB_URI),
+    MongooseModule.forRoot(databaseSettings.MONGODB_URI),
     MediaModule,
     UsersModule,
     ChatsModule,

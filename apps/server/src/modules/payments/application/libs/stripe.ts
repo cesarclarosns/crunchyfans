@@ -1,7 +1,7 @@
 import { Stripe } from 'stripe';
 
-import { settings } from '@/config/settings';
+import { paymentsSettings } from '@/config';
 
-export const stripe = new Stripe(settings.PAYMENTS.STRIPE_API_KEY, {
+export const stripe = new Stripe(paymentsSettings.STRIPE_API_KEY, {
   apiVersion: '2023-10-16',
 });

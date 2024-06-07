@@ -3,15 +3,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
 
-import { settings } from '@/config/settings';
+import { authSettings } from '@/config';
+import { AuthService } from '@/modules/auth/application/services/auth.service';
+import { TokensService } from '@/modules/auth/application/services/tokens.service';
+import { AUTH_STRATEGIES } from '@/modules/auth/domain/constants/auth-strategies';
 import { MediaService } from '@/modules/media/application/services/media.service';
 import { StorageService } from '@/modules/media/application/services/storage.service';
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
-
-import { AUTH_STRATEGIES } from '../../domain/constants/auth-strategies';
-import { AuthService } from '../services/auth.service';
-import { TokensService } from '../services/tokens.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(
@@ -27,9 +26,9 @@ export class GoogleStrategy extends PassportStrategy(
     private readonly tokensService: TokensService,
   ) {
     super({
-      callbackURL: settings.AUTH.GOOGLE_CALLBACK_URL,
-      clientID: settings.AUTH.GOOGLE_CLIENT_ID,
-      clientSecret: settings.AUTH.GOOGLE_CLIENT_SECRET,
+      callbackURL: authSettings.GOOGLE_CALLBACK_URL,
+      clientID: authSettings.GOOGLE_CLIENT_ID,
+      clientSecret: authSettings.GOOGLE_CLIENT_SECRET,
       scope: ['profile', 'email'],
     });
   }

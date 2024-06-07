@@ -2,12 +2,12 @@ import { IUnitOfWork } from '@/common/domain/repositories/unit-of-work.factory';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { GetUsersProfileBasicDto } from '@/modules/users/domain/dtos/get-users-profile-basic.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
-import { User } from '@/modules/users/domain/entities/user.model';
-import { UserData } from '@/modules/users/domain/entities/user-data.model';
+import { User } from '@/modules/users/domain/models/user';
+import { UserData } from '@/modules/users/domain/models/user-data';
 import {
   UserProfileBasic,
   UserProfileWithViewerData,
-} from '@/modules/users/domain/entities/user-profile.model';
+} from '@/modules/users/domain/models/user-profile';
 
 export interface IUsersRepository {
   createUser: (create: CreateUserDto, uow: IUnitOfWork) => Promise<User>;

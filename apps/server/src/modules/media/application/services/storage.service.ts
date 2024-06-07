@@ -7,10 +7,10 @@ import { Upload } from '@aws-sdk/lib-storage';
 // import { getSignedUrl as getCloudfrontSignedUrl } from '@aws-sdk/cloudfront-signer';
 import { getSignedUrl as getS3SignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
-import fs, { read } from 'fs-extra';
+import fs from 'fs-extra';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { settings } from '@/config/settings';
+import { awsSettings } from '@/config';
 
 @Injectable()
 export class StorageService {
@@ -21,12 +21,12 @@ export class StorageService {
   ) {
     this.s3Client = new S3Client({
       credentials: {
-        accessKeyId: settings.AWS.ACCESS_KEY_ID,
-        secretAccessKey: settings.AWS.SECRET_ACCESS_KEY,
+        accessKeyId: awsSettings.ACCESS_KEY_ID,
+        secretAccessKey: awsSettings.SECRET_ACCESS_KEY,
       },
-      endpoint: settings.AWS.S3_ENDPOINT_URL,
-      forcePathStyle: !!settings.AWS.S3_ENDPOINT_URL,
-      region: settings.AWS.REGION,
+      endpoint: awsSettings.S3_ENDPOINT_URL,
+      forcePathStyle: !!awsSettings.S3_ENDPOINT_URL,
+      region: awsSettings.REGION,
     });
   }
 

@@ -2,11 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { settings } from '@/config/settings';
+import { authSettings } from '@/config';
 import { Tokens } from '@/modules/auth/domain/models/tokens';
 import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { UsersService } from '@/modules/users/application/services/users.service';
-import { User } from '@/modules/users/domain/entities/user.model';
+import { User } from '@/modules/users/domain/models/user';
 
 @Injectable()
 export class TokensService {
@@ -18,15 +18,15 @@ export class TokensService {
 
   async createAccessToken(payload: TokenPayload): Promise<string> {
     return await this._jwtService.signAsync(payload, {
-      expiresIn: settings.AUTH.JWT_ACCESS_EXPIRE_MINUTES * 60,
-      secret: settings.AUTH.JWT_ACCESS_SECRET,
+      expiresIn: authSettings.JWT_ACCESS_EXPIRE_MINUTES * 60,
+      secret: authSettings.JWT_ACCESS_SECRET,
     });
   }
 
   async verifyAccessToken(token: string): Promise<object> {
     try {
       return await this._jwtService.verifyAsync(token, {
-        secret: settings.AUTH.JWT_ACCESS_SECRET,
+        secret: authSettings.JWT_ACCESS_SECRET,
       });
     } catch (error) {
       throw new UnauthorizedException();
@@ -35,15 +35,15 @@ export class TokensService {
 
   async createRefreshToken(payload: TokenPayload): Promise<string> {
     return await this._jwtService.signAsync(payload, {
-      expiresIn: settings.AUTH.JWT_REFRESH_EXPIRE_MINUTES * 60,
-      secret: settings.AUTH.JWT_REFRESH_SECRET,
+      expiresIn: authSettings.JWT_REFRESH_EXPIRE_MINUTES * 60,
+      secret: authSettings.JWT_REFRESH_SECRET,
     });
   }
 
   async verifyRefreshToken(token: string): Promise<object> {
     try {
       return await this._jwtService.verifyAsync(token, {
-        secret: settings.AUTH.JWT_REFRESH_SECRET,
+        secret: authSettings.JWT_REFRESH_SECRET,
       });
     } catch (error) {
       throw new UnauthorizedException();
@@ -52,15 +52,15 @@ export class TokensService {
 
   async createLinkToken(payload: TokenPayload): Promise<string> {
     return await this._jwtService.signAsync(payload, {
-      expiresIn: settings.AUTH.JWT_LINK_EXPIRE_MINUTES * 60,
-      secret: settings.AUTH.JWT_LINK_SECRET,
+      expiresIn: authSettings.JWT_LINK_EXPIRE_MINUTES * 60,
+      secret: authSettings.JWT_LINK_SECRET,
     });
   }
 
   async verifyLinkToken(token: string): Promise<object> {
     try {
       return await this._jwtService.verifyAsync(token, {
-        secret: settings.AUTH.JWT_LINK_SECRET,
+        secret: authSettings.JWT_LINK_SECRET,
       });
     } catch (error) {
       throw new UnauthorizedException();

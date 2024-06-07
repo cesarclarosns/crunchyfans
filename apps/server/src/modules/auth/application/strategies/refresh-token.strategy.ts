@@ -3,11 +3,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import { settings } from '@/config/settings';
-
-import { AUTH_COOKIES } from '../../domain/constants/auth-cookies';
-import { AUTH_STRATEGIES } from '../../domain/constants/auth-strategies';
-import { TokenPayload } from '../../domain/types/token-payload';
+import { authSettings } from '@/config';
+import { AUTH_COOKIES } from '@/modules/auth/domain/constants/auth-cookies';
+import { AUTH_STRATEGIES } from '@/modules/auth/domain/constants/auth-strategies';
+import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -21,7 +20,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       passReqToCallback: true,
-      secretOrKey: settings.AUTH.JWT_REFRESH_SECRET,
+      secretOrKey: authSettings.JWT_REFRESH_SECRET,
     });
   }
 

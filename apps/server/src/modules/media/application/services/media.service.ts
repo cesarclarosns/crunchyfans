@@ -2,15 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { settings } from '@/config/settings';
+import { mediaSettings } from '@/config';
 import { StorageService } from '@/modules/media/application/services/storage.service';
 import { CreateMediaDto } from '@/modules/media/domain/dtos/create-media.dto';
 import { GetMediasDto } from '@/modules/media/domain/dtos/get-medias.dto';
 import { UpdateMediaDto } from '@/modules/media/domain/dtos/update-media.dto';
+import { MEDIA_EVENTS, MediaCreatedEvent } from '@/modules/media/domain/events';
 import { Media } from '@/modules/media/domain/models/media.model';
 import { MediaRepository } from '@/modules/media/infrastructure/repositories/media.repository';
-
-import { MEDIA_EVENTS, MediaCreatedEvent } from '../../domain/events';
 
 @Injectable()
 export class MediaService {
@@ -55,7 +54,7 @@ export class MediaService {
       promises.push(
         (async () => {
           media.source = await this._storageService.createDownloadUrl({
-            bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+            bucket: mediaSettings.S3_BUCKET_MEDIA_NAME,
             fileKey: media.source,
           });
         })(),
@@ -65,7 +64,7 @@ export class MediaService {
       promises.push(
         (async () => {
           media.thubmnail = await this._storageService.createDownloadUrl({
-            bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+            bucket: mediaSettings.S3_BUCKET_MEDIA_NAME,
             fileKey: media.thubmnail,
           });
         })(),
@@ -75,7 +74,7 @@ export class MediaService {
       promises.push(
         (async () => {
           media.preview = await this._storageService.createDownloadUrl({
-            bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+            bucket: mediaSettings.S3_BUCKET_MEDIA_NAME,
             fileKey: media.preview,
           });
         })(),
@@ -86,7 +85,7 @@ export class MediaService {
         promises.push(
           (async () => {
             media.sources[key] = await this._storageService.createDownloadUrl({
-              bucket: settings.MEDIA.S3_BUCKET_MEDIA_NAME,
+              bucket: mediaSettings.S3_BUCKET_MEDIA_NAME,
               fileKey: media.sources[key],
             });
           })(),

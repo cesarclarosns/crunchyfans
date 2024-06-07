@@ -7,7 +7,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { URL } from 'url';
 
-import { settings } from '@/config/settings';
+import { appSettings } from '@/config';
 import { PasswordService } from '@/modules/auth/application/services/password.service';
 import { TokensService } from '@/modules/auth/application/services/tokens.service';
 import { SignInDto } from '@/modules/auth/domain/dtos/sign-in.dto';
@@ -24,7 +24,7 @@ import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
-import { User } from '@/modules/users/domain/entities/user.model';
+import { User } from '@/modules/users/domain/models/user';
 
 @Injectable()
 export class AuthService {
@@ -81,7 +81,7 @@ export class AuthService {
       sub: user.id,
     } satisfies TokenPayload);
 
-    const url = new URL('/', settings.APP.DOMAIN);
+    const url = new URL('/', appSettings.APP_DOMAIN);
     url.searchParams.set('token', token);
 
     this._eventEmitter.emit(

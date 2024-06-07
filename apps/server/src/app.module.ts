@@ -5,7 +5,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 
-import { settings } from '@/config/settings';
 import { AccessTokenGuard } from '@/modules/auth/application/guards';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { ChatsModule } from '@/modules/chats/chats.module';
@@ -20,6 +19,8 @@ import { ReviewsModule } from '@/modules/reviews/reviews.module';
 import { SocketModule } from '@/modules/socket/socket.module';
 import { SubscriptionsModule } from '@/modules/subscriptions/subscriptions.module';
 import { UsersModule } from '@/modules/users/users.module';
+
+import { databaseSettings, throttlerSettings } from './config';
 
 @Module({
   imports: [
@@ -40,10 +41,13 @@ import { UsersModule } from '@/modules/users/users.module';
     }),
     ThrottlerModule.forRoot({
       throttlers: [
-        { limit: settings.THROTTLER.LIMIT, ttl: settings.THROTTLER.TTL },
+        {
+          limit: throttlerSettings.THROTTLER_LIMIT,
+          ttl: throttlerSettings.THROTTLER_TTL,
+        },
       ],
     }),
-    MongooseModule.forRoot(settings.DATABASES.MONGODB_URI),
+    MongooseModule.forRoot(databaseSettings.MONGODB_URI),
     // RedisModule,
     UsersModule,
     AuthModule,
