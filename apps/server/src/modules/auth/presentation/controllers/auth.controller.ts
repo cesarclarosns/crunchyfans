@@ -31,26 +31,25 @@ import { RefreshTokenGuard } from '@/modules/auth/application/guards';
 import { GoogleGuard } from '@/modules/auth/application/guards/google.guard';
 import { AuthService } from '@/modules/auth/application/services/auth.service';
 import { TokensService } from '@/modules/auth/application/services/tokens.service';
-import { AUTH_COOKIES } from '@/modules/auth/domain/constants/auth-cookies';
-import { AUTH_TOKENS } from '@/modules/auth/domain/constants/auth-tokens';
 import { SignInDto } from '@/modules/auth/domain/dtos/sign-in.dto';
 import { SignInWithLinkDto } from '@/modules/auth/domain/dtos/sign-in-with-link.dto';
 import { SignInWithLinkConsumeDto } from '@/modules/auth/domain/dtos/sign-in-with-link-consume.dto';
 import { SignUpDto } from '@/modules/auth/domain/dtos/sign-up.dto';
 import { TokensDto } from '@/modules/auth/domain/dtos/tokens.dto';
 import { UpdatePasswordDto } from '@/modules/auth/domain/dtos/update-password.dto';
+import { AuthCookies, AuthTokens } from '@/modules/auth/domain/enums';
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { UserDto } from '@/modules/users/domain/dtos/user.dto';
 
 @ApiTags('auth')
-@ApiBearerAuth(AUTH_TOKENS.accessToken)
+@ApiBearerAuth(AuthTokens.accessToken)
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly eventEmitter: EventEmitter2,
-    private readonly usersService: UsersService,
-    private readonly authService: AuthService,
-    private readonly tokensService: TokensService,
+    private readonly _eventEmitter: EventEmitter2,
+    private readonly _usersService: UsersService,
+    private readonly _authService: AuthService,
+    private readonly _tokensService: TokensService,
   ) {}
 
   @Public()
@@ -75,9 +74,9 @@ export class AuthController {
     body.ip =
       (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!;
 
-    const tokens = await this.authService.signIn(body);
+    const tokens = await this._authService.signIn(body);
 
-    res.cookie(AUTH_COOKIES.refreshToken, tokens.refreshToken, {
+    res.cookie(AuthCookies.refreshToken, tokens.refreshToken, {
       httpOnly: true,
       path: '/',
     });
@@ -96,7 +95,7 @@ export class AuthController {
     type: BadRequestResponseBodyDto,
   })
   async signUp(@Body() body: SignUpDto) {
-    const user = await this.authService.signUp(body);
+    const user = await this._authService.signUp(body);
     return user;
   }
 
@@ -118,9 +117,9 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
 
-    const tokens = await this.tokensService.refreshTokens(userId);
+    const tokens = await this._tokensService.refreshTokens(userId);
 
-    res.cookie(AUTH_COOKIES.refreshToken, tokens.refreshToken, {
+    res.cookie(AuthCookies.refreshToken, tokens.refreshToken, {
       httpOnly: true,
       path: '/',
       sameSite: 'none',
@@ -137,7 +136,7 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
 
-    return await this.authService.updateUserPassword(userId, body);
+    return await this._authService.updateUserPassword(userId, body);
   }
 
   @Public()
@@ -147,12 +146,12 @@ export class AuthController {
     query.ip =
       (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress!;
 
-    return await this.authService.signInWithLink(query);
+    return await this._authService.signInWithLink(query);
   }
 
   @Get('signin/link/consume')
   async signInWithLinkConsume(@Query() query: SignInWithLinkConsumeDto) {
-    const tokens = await this.authService.signInWithLinkConsume(query);
+    const tokens = await this._authService.signInWithLinkConsume(query);
     return tokens;
   }
 
@@ -170,9 +169,9 @@ export class AuthController {
   ) {
     const userId = req.user.sub;
 
-    const tokens = await this.tokensService.refreshTokens(userId);
+    const tokens = await this._tokensService.refreshTokens(userId);
 
-    res.cookie(AUTH_COOKIES.refreshToken, tokens.refreshToken, {
+    res.cookie(AuthCookies.refreshToken, tokens.refreshToken, {
       httpOnly: true,
       path: '/',
       sameSite: 'lax',

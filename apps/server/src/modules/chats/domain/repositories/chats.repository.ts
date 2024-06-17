@@ -8,56 +8,70 @@ import {
   Chat,
   ChatWithViewerData,
   Message,
+  MessageWithViewerData,
   UserChat,
   UserMessage,
-} from '@/modules/chats/domain/models';
-import { MessageWithViewerData } from '@/modules/chats/domain/models/message.model';
+} from '@/modules/chats/domain/entities';
 
 export interface IChatsRepository {
   createChat: (create: CreateChatDto, uow: IUnitOfWork) => Promise<Chat>;
+
   getChatsWithViewerData: (
     filter: GetChatsDto,
     viewerId: string,
   ) => Promise<ChatWithViewerData[]>;
+
   getChatById: (chatId: string) => Promise<Chat | null>;
+
   getChatWithViewerDataById: (
     chatId: string,
     viewerId: string,
   ) => Promise<ChatWithViewerData | null>;
+
   deleteChat: (chatId: string, userId: string) => Promise<UserChat | null>;
+
   createMessage: (
     create: CreateMessageDto,
     uow: IUnitOfWork,
   ) => Promise<Message>;
+
   getMessagesWithViewerData: (
     filter: GetMessagesDto,
     viewerId: string,
   ) => Promise<MessageWithViewerData[]>;
+
   getMessageById: (messageId: string) => Promise<Message | null>;
+
   getMessageWithViewerDataById: (
     messageId: string,
     viewerId: string,
   ) => Promise<MessageWithViewerData | null>;
+
   updateMessage: (
     messageId: string,
     update: UpdateMessageDto,
   ) => Promise<Message | null>;
+
   deleteMessage: (messageId: string) => Promise<Message | null>;
+
   setMessageAsRead: (
     messageId: string,
     userId: string,
     uow: IUnitOfWork,
   ) => Promise<UserChat | null>;
+
   unsetMessageAsRead: (
     messageId: string,
     userId: string,
     uow: IUnitOfWork,
   ) => Promise<UserChat | null>;
+
   setMessageAsPurchased: (
     messageId: string,
     userId: string,
     uow: IUnitOfWork,
   ) => Promise<UserMessage | null>;
+
   unsetMessageAsPurchased: (
     messageId: string,
     userId: string,

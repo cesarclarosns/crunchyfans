@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
+import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
 import { mediaSettings } from '@/config';
 import { StorageService } from '@/modules/media/application/services/storage.service';
 import { CreateMediaDto } from '@/modules/media/domain/dtos/create-media.dto';
 import { GetMediasDto } from '@/modules/media/domain/dtos/get-medias.dto';
 import { UpdateMediaDto } from '@/modules/media/domain/dtos/update-media.dto';
-import { MEDIA_EVENTS, MediaCreatedEvent } from '@/modules/media/domain/events';
-import { Media } from '@/modules/media/domain/models/media.model';
-import { MediaRepository } from '@/modules/media/infrastructure/repositories/media.repository';
+import { Media } from '@/modules/media/domain/entities/media';
+
+import { IMediaRepository } from '../../domain/repositories/media.repository';
 
 @Injectable()
 export class MediaService {
@@ -17,18 +19,26 @@ export class MediaService {
     @InjectPinoLogger(MediaService.name) private readonly _logger: PinoLogger,
     private readonly _eventEmitter: EventEmitter2,
     private readonly _storageService: StorageService,
-    private readonly _mediaRepository: MediaRepository,
+    @Inject(IMediaRepository)
+    private readonly _mediaRepository: IMediaRepository,
+    @Inject(IUnitOfWorkFactory)
+    private readonly _unitOfWorkFactory: IUnitOfWorkFactory,
   ) {}
 
   async createMedia(create: CreateMediaDto) {
-    const media = await this._mediaRepository.createMedia(create);
+    const unitOfWork = this._unitOfWorkFactory.create();
+    await unitOfWork.start();
 
-    this._eventEmitter.emit(
-      MEDIA_EVENTS.mediaCreated,
-      new MediaCreatedEvent({ mediaId: media.id }),
-    );
+    try {
+      const media = await this._mediaRepository.createMedia(create, unitOfWork);
 
-    return media;
+      await unitOfWork.commit();
+
+      return media;
+    } catch (error) {
+      await unitOfWork.rollback();
+      throw error;
+    }
   }
 
   async getMedias(filter: GetMediasDto) {
@@ -40,11 +50,39 @@ export class MediaService {
   }
 
   async updateMedia(mediaId: string, update: UpdateMediaDto) {
-    return await this._mediaRepository.updateMedia(mediaId, update);
+    const uow = this._unitOfWorkFactory.create();
+    await uow.start();
+
+    try {
+      const media = await this._mediaRepository.updateMedia(
+        mediaId,
+        update,
+        uow,
+      );
+
+      await uow.commit();
+
+      return media;
+    } catch (error) {
+      await uow.rollback();
+      throw error;
+    }
   }
 
   async deleteMedia(mediaId: string) {
-    return await this._mediaRepository.deleteMedia(mediaId);
+    const uow = this._unitOfWorkFactory.create();
+    await uow.start();
+
+    try {
+      const media = await this._mediaRepository.deleteMedia(mediaId, uow);
+
+      await uow.commit();
+
+      return media;
+    } catch (error) {
+      await uow.rollback();
+      throw error;
+    }
   }
 
   async addDownloadUrlsToMedia(media: Media): Promise<void> {

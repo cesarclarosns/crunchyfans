@@ -13,6 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { Public } from '@/modules/auth/application/decorators/public.decorator';
 import { OptionalAccessTokenGuard } from '@/modules/auth/application/guards/optional-access-token.guard';
@@ -24,7 +25,11 @@ import { UpdateUserDto } from '../../domain/dtos/update-user.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    @InjectPinoLogger(UsersController.name)
+    private readonly _logger: PinoLogger,
+    private readonly _usersService: UsersService,
+  ) {}
 
   // @UseInterceptors(ClassSerializerInterceptor)
   // @Post()

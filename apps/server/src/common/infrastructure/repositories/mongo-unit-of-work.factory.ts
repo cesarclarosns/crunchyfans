@@ -8,10 +8,9 @@ import {
 } from '@/common/domain/repositories/unit-of-work.factory';
 
 export class MongoUnitOfWork implements IUnitOfWork {
-  _connection: mongoose.Connection;
-  _dbContext: { session: mongoose.mongo.ClientSession };
+  session: mongoose.mongo.ClientSession;
 
-  constructor(_connection: mongoose.Connection) {
+  constructor(private readonly _connection: mongoose.Connection) {
     this._connection = _connection;
   }
 
@@ -19,19 +18,17 @@ export class MongoUnitOfWork implements IUnitOfWork {
     const session = await this._connection.startSession();
     session.startTransaction();
 
-    this._dbContext = { session };
+    this.session = session;
   }
 
   async commit() {
-    await this._dbContext.session.commitTransaction();
+    await this.session.commitTransaction();
+    await this.session.endSession();
   }
 
   async rollback() {
-    await this._dbContext.session.abortTransaction();
-  }
-
-  async end() {
-    await this._dbContext.session.endSession();
+    await this.session.abortTransaction();
+    await this.session.endSession();
   }
 }
 

@@ -1,41 +1,6 @@
-import {
-  IsBoolean,
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-
-export class PicturesDto {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  cover?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  profile?: string;
-
-  constructor(partial: Partial<PicturesDto>) {
-    Object.assign(this, partial);
-  }
-}
-
-export class OAuthDto {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  googleId?: string;
-
-  constructor(partial: Partial<OAuthDto>) {
-    Object.assign(this, partial);
-  }
-}
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateUserDto {
-  id?: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -51,27 +16,11 @@ export class CreateUserDto {
   @IsNotEmpty()
   hashedPassword?: string;
 
-  about?: string;
-
   @IsString()
-  lastSeen?: string;
+  @IsNotEmpty()
+  profilePicture?: string;
 
-  pictures?: PicturesDto;
-
-  oauth?: OAuthDto;
-
-  @IsOptional()
-  @IsBoolean()
-  isEmailVerified: boolean;
-
-  constructor({ oauth, pictures, ...partial }: Partial<CreateUserDto>) {
-    Object.assign(this, partial);
-
-    if (pictures) {
-      this.pictures = new PicturesDto(pictures);
-    }
-    if (oauth) {
-      this.oauth = new OAuthDto(oauth);
-    }
+  constructor(dto: CreateUserDto) {
+    Object.assign(this, dto);
   }
 }

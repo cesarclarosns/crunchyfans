@@ -1,31 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import { RedisClient } from '../redis.module';
+import { RedisClient } from '@/core/redis/redis.module';
 
-export interface IEventConsumer {
-  start: () => void;
-  stop: () => void;
-}
-
-export interface IEventProducer {
-  send: (ev: unknown) => Promise<unknown>;
-}
-
-export class RedisEventConsumer implements IEventConsumer, OnModuleInit {
-  start() {}
-  stop() {}
-
-  onModuleInit() {}
-}
-
-export class RedisEventProducer implements IEventProducer {
-  send: (...args: any[]) => Promise<unknown>;
-}
-
-@Injectable()
-export class RedisService {}
-
-export class Consumer {
+export class RedisStreamsConsumer {
   client: RedisClient;
   consumerGroupName: string;
   consumerName: string;
@@ -35,7 +13,7 @@ export class Consumer {
   batchSize: number;
   blockTimeMs: number;
 
-  readMessages() {
+  async readMessages() {
     this.client.xreadgroup(
       'GROUP',
       this.consumerGroupName,
@@ -50,23 +28,34 @@ export class Consumer {
     );
   }
 
-  readPendingMessages() {
+  async readPendingMessages() {
     this.client.xpending('', this.consumerGroupName, 'IDLE', 1, 1);
   }
 
-  acknowledge(...messageIds: string[]) {
+  async acknowledge(...messageIds: string[]) {
     this.client.xack('', '', ...messageIds);
   }
 
-  moveToDeadLetterQueue() {
+  async moveToDeadLetterQueue() {
     this.client.xdel('');
     this.client.xadd('');
   }
+
+  async start() {}
+
+  async stop() {}
 }
 
-/**
- *  users:user_created
- *
- *
- *
- */
+@Injectable()
+export class RedisStreamsProducer {
+  constructor(
+    @InjectPinoLogger(RedisStreamsProducer.name)
+    private readonly _logger: PinoLogger,
+    @Inject(RedisClient)
+    private readonly _redisClient: RedisClient,
+  ) {}
+
+  send(streamName: string, data: string) {
+    this._redisClient.xadd(streamName, '*', 'data', data);
+  }
+}

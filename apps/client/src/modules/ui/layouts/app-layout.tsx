@@ -2,9 +2,9 @@
 
 import { useAuthStore } from '@/modules/auth/stores/auth-store';
 
+import { NavBar } from '../../../components/navbar';
 import { AuthForms } from '../../auth/components/auth-forms';
 import { AuthFormsProvider } from '../../auth/components/auth-forms-provider';
-import { NavBar } from '../../../components/navbar';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore((state) => state);

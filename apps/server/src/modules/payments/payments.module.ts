@@ -6,8 +6,8 @@ import { PaymentsService } from './application/services/payments.service';
 import {
   BillingAccount,
   BillingAccountSchema,
-} from './domain/entities/billing.entity';
-import { Payment, PaymentSchema } from './domain/entities/payment.entity';
+} from './infrastructure/repositories/mongo/entities/billing.entity';
+import { Payment, PaymentSchema } from './infrastructure/repositories/mongo/entities/payment.entity';
 import { PaymentsController } from './presentation/controllers/payments.controller';
 
 @Module({

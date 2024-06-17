@@ -11,17 +11,30 @@ import { SubscriptionsModule } from '@/modules/subscriptions/subscriptions.modul
 import { UsersService } from '@/modules/users/application/services/users.service';
 import { IUsersRepository } from '@/modules/users/domain/repositories/users.repository';
 import {
+  Account,
+  AccountSchema,
   User,
   UserSchema,
-} from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
+} from '@/modules/users/infrastructure/repositories/mongo/entities';
 import { MongoUsersRepository } from '@/modules/users/infrastructure/repositories/mongo/mongo-users.repository';
 import { UsersController } from '@/modules/users/presentation/controllers/users.controller';
 
+import { IAccountsRepository } from './domain/repositories/accounts.repository';
+import { MongoAccountsRepository } from './infrastructure/repositories/mongo';
+
 @Module({
   controllers: [UsersController],
-  exports: [MongooseModule, IUsersRepository, UsersService],
+  exports: [
+    MongooseModule,
+    IAccountsRepository,
+    IUsersRepository,
+    UsersService,
+  ],
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: Account.name, schema: AccountSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
     MediaModule,
     ChatsModule,
     SubscriptionsModule,
@@ -29,6 +42,10 @@ import { UsersController } from '@/modules/users/presentation/controllers/users.
     NotificationsModule,
   ],
   providers: [
+    {
+      provide: IAccountsRepository,
+      useClass: MongoAccountsRepository,
+    },
     { provide: IUsersRepository, useClass: MongoUsersRepository },
     {
       provide: IUnitOfWorkFactory,

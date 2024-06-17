@@ -4,7 +4,7 @@ import { api } from '@/common/libs/apis';
 import { type UpdateProfile } from '@/modules/users/schemas/update-profile';
 import { type User } from '@/modules/users/schemas/user';
 
-import { useCurrentUserData } from './use-get-current-user-data';
+import { useCurrentUserData } from './use-get-current-user';
 import { usersKeys } from './users-keys';
 
 export function useUpdateUser() {

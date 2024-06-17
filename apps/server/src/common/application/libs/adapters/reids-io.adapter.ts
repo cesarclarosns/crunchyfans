@@ -12,7 +12,7 @@ import {
   databaseSettings,
   socketSettings,
 } from '@/config';
-import { AUTH_TOKENS } from '@/modules/auth/domain/constants/auth-tokens';
+import { AuthTokens } from '@/modules/auth/domain/enums/auth-tokens';
 import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { CustomServer } from '@/modules/socket/domain/types/socket';
 
@@ -55,7 +55,7 @@ export class RedisIoAdapter extends IoAdapter {
     server.use((socket, next) => {
       try {
         const accessToken = socket.handshake.query[
-          AUTH_TOKENS.accessToken
+          AuthTokens.accessToken
         ] as string;
 
         socket.data = jwt.verify(

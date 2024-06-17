@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
-import { MediaRepository } from '@/modules/media/infrastructure/repositories/media.repository';
+import { IMediaRepository } from '@/modules/media/domain/repositories/media.repository';
 import { CreatePostDto } from '@/modules/posts/domain/dtos/create-post.dto';
 import { CreatePostCommentDto } from '@/modules/posts/domain/dtos/create-post-comment.dto';
 import { GetPostsDto } from '@/modules/posts/domain/dtos/get-posts.dto';
@@ -16,14 +16,14 @@ import {
   PostCommentWithViewerData,
   PostWithViewerData,
   UserPost,
-} from '@/modules/posts/domain/models';
+} from '@/modules/posts/domain/entities';
 import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
 import {
   Post as PostEntity,
   PostComment as PostCommentEntity,
   UserPost as UserPostEntity,
   UserPostComment as UserPostCommentEntity,
-  UserPostsData as UserPostsDataEntity,
+  UserPosts as UserPostsEntity,
 } from '@/modules/posts/infrastructure/repositories/mongo/entities';
 
 @Injectable()
@@ -31,7 +31,8 @@ export class MongoPostsRepository implements IPostsRepository {
   constructor(
     @InjectPinoLogger(MongoPostsRepository.name)
     private readonly _logger: PinoLogger,
-    private readonly _mediaRepository: MediaRepository,
+    @Inject(IMediaRepository)
+    private readonly _mediaRepository: IMediaRepository,
     @InjectModel(PostEntity.name)
     private readonly _postModel: Model<PostEntity>,
     @InjectModel(PostCommentEntity.name)
@@ -40,8 +41,8 @@ export class MongoPostsRepository implements IPostsRepository {
     private readonly _userPostModel: Model<UserPostEntity>,
     @InjectModel(UserPostCommentEntity.name)
     private readonly _userPostCommentModel: Model<UserPostCommentEntity>,
-    @InjectModel(UserPostsDataEntity.name)
-    private readonly _userPostsDataModel: Model<UserPostsDataEntity>,
+    @InjectModel(UserPostsEntity.name)
+    private readonly _userPostsModel: Model<UserPostsEntity>,
   ) {}
 
   async createPost(create: CreatePostDto, uow: MongoUnitOfWork): Promise<Post> {
@@ -51,19 +52,19 @@ export class MongoPostsRepository implements IPostsRepository {
     });
 
     // Update userPostsData
-    await this._userPostsDataModel.findOneAndUpdate(
+    await this._userPostsModel.findOneAndUpdate(
       {
         userId: create.userId,
       },
       { postsCount: { $inc: 1 } },
       {
-        session: uow._dbContext.session,
+        session: uow.session,
         upsert: true,
       },
     );
 
     const [_post] = await this._postModel.insertMany([create], {
-      session: uow._dbContext.session,
+      session: uow.session,
     });
 
     const post = new Post(_post.toJSON());
@@ -187,7 +188,7 @@ export class MongoPostsRepository implements IPostsRepository {
   //       { $inc: { likesCount: 1 } },
   //       { new: true, session, upsert: true },
   //     ),
-  //     this._userPostsDataModel.findOneAndUpdate(
+  //     this._userPostsModel.findOneAndUpdate(
   //       { userId },
   //       {
   //         $inc: { likesCount: 1 },

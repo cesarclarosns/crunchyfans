@@ -7,12 +7,12 @@ import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit
 import { CreateUserDto } from '@/modules/users/domain/dtos/create-user.dto';
 import { GetUsersProfileBasicDto } from '@/modules/users/domain/dtos/get-users-profile-basic.dto';
 import { UpdateUserDto } from '@/modules/users/domain/dtos/update-user.dto';
-import { User } from '@/modules/users/domain/models/user';
-import { UserData } from '@/modules/users/domain/models/user-data';
+import { User } from '@/modules/users/domain/entities/user';
+import { UserData } from '@/modules/users/domain/entities/user-data';
 import {
   UserProfileBasic,
   UserProfileWithViewerData,
-} from '@/modules/users/domain/models/user-profile';
+} from '@/modules/users/domain/entities/user-profile';
 import { IUsersRepository } from '@/modules/users/domain/repositories/users.repository';
 import { User as UserEntity } from '@/modules/users/infrastructure/repositories/mongo/entities/user.entity';
 
@@ -26,7 +26,7 @@ export class MongoUsersRepository implements IUsersRepository {
 
   async createUser(create: CreateUserDto, uow: MongoUnitOfWork): Promise<User> {
     const [_user] = await this._userModel.insertMany([create], {
-      session: uow._dbContext.session,
+      session: uow.session,
     });
 
     const user = new User(_user.toJSON());
@@ -37,16 +37,7 @@ export class MongoUsersRepository implements IUsersRepository {
     const _user = await this._userModel.findOne({
       _id: userId,
     });
-    if (!_user) return null;
-
-    const user = new User(_user.toJSON());
-    return user;
-  }
-
-  async getUserByGoogleId(googleId: string): Promise<User | null> {
-    const _user = await this._userModel.findOne({
-      'oauth.googleId': googleId,
-    });
+    this._logger.debug({ _user });
     if (!_user) return null;
 
     const user = new User(_user.toJSON());

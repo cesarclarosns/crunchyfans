@@ -6,8 +6,8 @@ import { PaymentsService } from '../../../payments/application/services/payments
 import { CreateSubscriptionDto } from '../../domain/dtos/create-subscription.dto';
 import { UpdateSubscriptionDto } from '../../domain/dtos/update-subscription.dto';
 import { UpdateSubscriptionPlanDto } from '../../domain/dtos/update-subscription-plan.dto';
-import { Subscription } from '../../domain/entities/subscription.entity';
-import { SubscriptionPlan } from '../../domain/entities/subscription-plan.entity';
+import { Subscription } from '../../infrastructure/repositories/mongo/entities/subscription.entity';
+import { SubscriptionPlan } from '../../infrastructure/repositories/mongo/entities/subscription-plan.entity';
 
 @Injectable()
 export class SubscriptionsService {

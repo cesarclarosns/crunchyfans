@@ -4,10 +4,30 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
 import { MediaService } from '@/modules/media/application/services/media.service';
+import {
+  PostCreatedEvent,
+  PostsDomainEvents,
+} from '@/modules/posts/domain/domain-events';
 import { CreatePostDto } from '@/modules/posts/domain/dtos/create-post.dto';
-import { PostCreatedEvent, POSTS_EVENTS } from '@/modules/posts/domain/events';
-import { Post } from '@/modules/posts/domain/models';
+import { GetPostsDto } from '@/modules/posts/domain/dtos/get-posts.dto';
+import { UpdatePostDto } from '@/modules/posts/domain/dtos/update-post.dto';
+import { Post, PostWithViewerData } from '@/modules/posts/domain/entities';
 import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
+
+export interface IPostsService {
+  createPost: (create: CreatePostDto) => Promise<Post>;
+  getPostsWithViewerData: (
+    filter: GetPostsDto,
+    viewerId: string,
+  ) => Promise<PostWithViewerData[]>;
+  getPostWithViewerDataById: (
+    postId: string,
+    viewerId: string,
+  ) => Promise<PostWithViewerData | null>;
+  getPostById: (postId: string) => Promise<Post | null>;
+  updatePost: (postId: string, update: UpdatePostDto) => Promise<Post | null>;
+  deletePost: (postId: string) => Promise<Post | null>;
+}
 
 @Injectable()
 export class PostsService {
@@ -27,18 +47,16 @@ export class PostsService {
     try {
       const post = await this._postsRepository.createPost(create, uow);
 
-      this._eventEmitter.emit(
-        POSTS_EVENTS.postCreated,
-        new PostCreatedEvent({ postId: post.id }),
-      );
+      this._eventEmitter.emit(PostsDomainEvents.postCreated, {
+        postId: post.id,
+      } satisfies PostCreatedEvent);
 
       await uow.commit();
+
       return post;
     } catch (error) {
       await uow.rollback();
       throw error;
-    } finally {
-      await uow.end();
     }
   }
 

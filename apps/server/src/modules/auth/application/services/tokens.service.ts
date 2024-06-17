@@ -3,10 +3,20 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { authSettings } from '@/config';
-import { Tokens } from '@/modules/auth/domain/models/tokens';
+import { Tokens } from '@/modules/auth/domain/entities/tokens';
 import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 import { UsersService } from '@/modules/users/application/services/users.service';
-import { User } from '@/modules/users/domain/models/user';
+import { User } from '@/modules/users/domain/entities/user';
+
+export interface ITokensService {
+  createAccessToken(payload: TokenPayload): Promise<string>;
+
+  verifyAccessToken(token: string): Promise<object>;
+
+  createRefreshToken(payload: TokenPayload): Promise<string>;
+
+  verifyRefreshToken(token: string): Promise<object>;
+}
 
 @Injectable()
 export class TokensService {

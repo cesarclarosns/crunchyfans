@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { api } from '@/common/libs/apis';
-import { type UserProfile } from '@/modules/users/schemas/user';
+import { type UserProfile } from '@/modules/users/models/user-profile';
 
-export function useGetUserProfileQuery(username: string | null) {
+export const useGetUserProfile = (username: string) => {
   return useQuery({
     enabled: !!username,
     queryFn: async (): Promise<UserProfile> => {
@@ -12,4 +12,4 @@ export function useGetUserProfileQuery(username: string | null) {
     },
     queryKey: [`users/${username}/profile`],
   });
-}
+};

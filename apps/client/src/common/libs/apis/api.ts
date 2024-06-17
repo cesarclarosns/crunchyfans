@@ -1,9 +1,12 @@
 import axios, { AxiosError, HttpStatusCode } from 'axios';
 import axiosRetry from 'axios-retry';
+import { Cookies } from 'react-cookie';
 
+import { AUTH_COOKIES } from '@/common/constants/cookies';
 import { env } from '@/env';
 import { refresh } from '@/modules/auth/libs/refresh';
-import { useAuthStore } from '@/modules/auth/stores/auth-store';
+
+const cookies = new Cookies();
 
 const api = axios.create({
   baseURL: `${env.NEXT_PUBLIC_API_DOMAIN}${env.NEXT_PUBLIC_API_PATH}`,
@@ -28,25 +31,25 @@ axiosRetry(api, {
 let refreshTokenPromise: Promise<string> | undefined;
 
 api.interceptors.request.use(
-  (reqConfig) => {
-    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+  (req) => {
+    const isUserAuthenticated = cookies.get(AUTH_COOKIES.isUserAuthenticated);
 
-    if (isAuthenticated && !reqConfig.headers.Authorization) {
-      const accessToken = useAuthStore.getState().auth?.accessToken;
-      reqConfig.headers.Authorization = `Bearer ${accessToken}`;
+    if (isUserAuthenticated && !req.headers.Authorization) {
+      const accessToken = cookies.get(AUTH_COOKIES.accessToken);
+      req.headers.Authorization = `Bearer ${accessToken}`;
     }
 
-    return reqConfig;
+    return req;
   },
   (err) => Promise.reject(err),
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   async (err) => {
-    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+    const isUserAuthenticated = cookies.get(AUTH_COOKIES.isUserAuthenticated);
 
-    if (isAuthenticated && err instanceof AxiosError) {
+    if (isUserAuthenticated && err instanceof AxiosError) {
       const prevRequest = err.config!;
 
       if (err.config && err.response?.status === HttpStatusCode.Unauthorized) {

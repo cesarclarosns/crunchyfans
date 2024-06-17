@@ -1,25 +1,33 @@
+import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
 import { CreateMediaDto } from '@/modules/media/domain/dtos/create-media.dto';
 import { GetMediasDto } from '@/modules/media/domain/dtos/get-medias.dto';
 import { UpdateMediaDto } from '@/modules/media/domain/dtos/update-media.dto';
-import { Media } from '@/modules/media/domain/models/media.model';
+import { Media } from '@/modules/media/domain/entities/media';
+import { IMediaRepository } from '@/modules/media/domain/repositories/media.repository';
+import { Media as MediaEntity } from '@/modules/media/infrastructure/repositories/entities/media.entity';
 
-import { Media as MediaEntity } from './entities/media.entity';
-
-export class MediaRepository {
+@Injectable()
+export class MongoMediaRepository implements IMediaRepository {
   constructor(
-    @InjectPinoLogger(MediaRepository.name)
+    @InjectPinoLogger(MongoMediaRepository.name)
     private readonly _logger: PinoLogger,
     @InjectConnection() private readonly _connection: mongoose.Connection,
     @InjectModel(MediaEntity.name)
     private readonly _mediaModel: Model<MediaEntity>,
   ) {}
 
-  async createMedia(create: CreateMediaDto): Promise<Media> {
-    const _media = await this._mediaModel.create(create);
+  async createMedia(
+    create: CreateMediaDto,
+    uow: MongoUnitOfWork,
+  ): Promise<Media> {
+    const [_media] = await this._mediaModel.insertMany([create], {
+      session: uow.session,
+    });
 
     const media = new Media(_media.toJSON());
     this._logger.debug('createMedia done', media);
@@ -48,12 +56,14 @@ export class MediaRepository {
   async updateMedia(
     mediaId: string,
     update: UpdateMediaDto,
+    uow: MongoUnitOfWork,
   ): Promise<Media | null> {
     const _media = await this._mediaModel.findByIdAndUpdate(
       mediaId,
       { $set: update },
       {
         new: true,
+        session: uow.session,
       },
     );
     if (!_media) return null;
@@ -63,8 +73,13 @@ export class MediaRepository {
     return media;
   }
 
-  async deleteMedia(mediaId: string): Promise<Media | null> {
-    const _media = await this._mediaModel.findByIdAndDelete(mediaId);
+  async deleteMedia(
+    mediaId: string,
+    uow: MongoUnitOfWork,
+  ): Promise<Media | null> {
+    const _media = await this._mediaModel.findByIdAndDelete(mediaId, {
+      session: uow.session,
+    });
     if (!_media) return null;
 
     const media = new Media(_media.toJSON());

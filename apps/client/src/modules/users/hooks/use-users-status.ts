@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { socket } from '@/modules/socket/libs/socket';
 
-export function useUsersStatus(ids: string[]) {
+export const useUsersStatus = (ids: string[]) => {
   const [usersStatus, setUsersStatus] = useState<{
     offline: string[];
     online: string[];
@@ -25,10 +25,10 @@ export function useUsersStatus(ids: string[]) {
     handleGetStatus();
     const interval = setInterval(() => {
       handleGetStatus();
-    }, 30000);
+    }, 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
 
   return { usersStatus };
-}
+};

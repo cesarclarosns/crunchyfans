@@ -6,11 +6,11 @@ import { SubscriptionsService } from './application/services/subscriptions.servi
 import {
   Subscription,
   SubscriptionSchema,
-} from './domain/entities/subscription.entity';
+} from './infrastructure/repositories/mongo/entities/subscription.entity';
 import {
   SubcriptionPlanSchema,
   SubscriptionPlan,
-} from './domain/entities/subscription-plan.entity';
+} from './infrastructure/repositories/mongo/entities/subscription-plan.entity';
 import { SubscriptionsController } from './presentation/subscriptions.controller';
 
 @Module({

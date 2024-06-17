@@ -14,11 +14,11 @@ import {
   Chat,
   ChatWithViewerData,
   Message,
+  MessageWithViewerData,
   UserChat,
-  UserChatsData,
+  UserChats,
   UserMessage,
-} from '@/modules/chats/domain/models';
-import { MessageWithViewerData } from '@/modules/chats/domain/models/message.model';
+} from '@/modules/chats/domain/entities';
 import { IChatsRepository } from '@/modules/chats/domain/repositories/chats.repository';
 import {
   Chat as ChatEntity,
@@ -44,7 +44,7 @@ export class MongoChatsRepository implements IChatsRepository {
 
   async createChat(create: CreateChatDto, uow: MongoUnitOfWork): Promise<Chat> {
     const [_chat] = await this._chatModel.insertMany([create], {
-      session: uow._dbContext.session,
+      session: uow.session,
     });
 
     await this._userChatModel.insertMany(
@@ -53,7 +53,7 @@ export class MongoChatsRepository implements IChatsRepository {
         userId,
       })),
       {
-        session: uow._dbContext.session,
+        session: uow.session,
       },
     );
 
@@ -187,14 +187,14 @@ export class MongoChatsRepository implements IChatsRepository {
 
   async createMessage(create: CreateMessageDto, uow: MongoUnitOfWork) {
     const [messageDocument] = await this._messageModel.insertMany([create], {
-      session: uow._dbContext.session,
+      session: uow.session,
     });
 
     await this._chatModel.updateOne(
       { _id: create.chatId },
       { lastMessageId: messageDocument._id, lastSenderId: create.userId },
       {
-        session: uow._dbContext.session,
+        session: uow.session,
       },
     );
 
@@ -243,7 +243,7 @@ export class MongoChatsRepository implements IChatsRepository {
     return message;
   }
 
-  async getUserChatsData(userId: string): Promise<UserChatsData | null> {
+  async getUserChats(userId: string): Promise<UserChats | null> {
     const aggregateResult = await this._chatModel.aggregate([
       {
         $match: {
@@ -281,7 +281,7 @@ export class MongoChatsRepository implements IChatsRepository {
       },
     ]);
 
-    return new UserChatsData({ unreadChats: [], unreadChatsCount: 1 });
+    return new UserChats({ unreadChats: [], unreadChatsCount: 1 });
   }
 
   async setMessageAsRead(

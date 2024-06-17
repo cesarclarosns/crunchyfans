@@ -12,9 +12,8 @@ import { CreatePayoutDto } from '../../domain/dtos/create-payout.dto';
 import { FindAllPaymentsDto } from '../../domain/dtos/find-all-payments.dto';
 import { SetupIntentDto } from '../../domain/dtos/setup-intent.dto';
 import { UpdatePaymentDto } from '../../domain/dtos/update-payment.dto';
-import { Payment } from '../../domain/entities/payment.entity';
+import { Payment } from '../../infrastructure/repositories/mongo/entities/payment.entity';
 import { stripe } from '../libs/stripe';
-
 // stripe.subscriptions.create({
 //   collection_method: 'charge_automatically',
 // });

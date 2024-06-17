@@ -17,7 +17,7 @@ export class StorageService {
   private readonly s3Client: S3Client;
 
   constructor(
-    @InjectPinoLogger(StorageService.name) private readonly logger: PinoLogger,
+    @InjectPinoLogger(StorageService.name) private readonly _logger: PinoLogger,
   ) {
     this.s3Client = new S3Client({
       credentials: {
@@ -83,11 +83,11 @@ export class StorageService {
     });
 
     upload.on('httpUploadProgress', (progress) => {
-      this.logger.info('upload progress', progress);
+      this._logger.info('upload progress', progress);
     });
 
     await upload.done();
 
-    this.logger.info('upload done');
+    this._logger.info('upload done');
   }
 }

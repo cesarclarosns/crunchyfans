@@ -10,7 +10,7 @@ import {
 } from '@/modules/media/libs';
 import { type Media } from '@/modules/media/schemas/media';
 
-import { useGetCurrentUserQuery } from '../../users/hooks/use-get-current-user-data';
+import { useGetCurrentUserQuery } from '../../users/hooks/use-get-current-user';
 import { useCreateMediaMutation } from './use-create-media';
 import { useMultipartUploadMutations } from './use-multipart-upload';
 import { useUploadMutations } from './use-upload-mutations';

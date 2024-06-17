@@ -12,8 +12,8 @@ import { CorsExceptionFilter } from '@/common/application/libs/filters/cors-exce
 import { MongooseExceptionFilter } from '@/common/application/libs/filters/mongoose-exception.filter';
 import { CorsError } from '@/common/domain/errors/cors.error';
 import { appSettings, corsSettings } from '@/config';
-import { AUTH_COOKIES } from '@/modules/auth/domain/constants/auth-cookies';
-import { AUTH_TOKENS } from '@/modules/auth/domain/constants/auth-tokens';
+import { AuthCookies } from '@/modules/auth/domain/enums/auth-cookies';
+import { AuthTokens } from '@/modules/auth/domain/enums/auth-tokens';
 
 // mongoose.set('debug', true);
 
@@ -37,22 +37,22 @@ function setSwagger(app: INestApplication) {
     .setDescription("Chatto's RESTful API")
     .setVersion('1.0')
     .addCookieAuth(
-      AUTH_COOKIES.refreshToken,
+      AuthCookies.refreshToken,
       {
         in: 'cookie',
-        name: AUTH_COOKIES.refreshToken,
+        name: AuthCookies.refreshToken,
         type: 'apiKey',
       },
-      AUTH_COOKIES.refreshToken,
+      AuthCookies.refreshToken,
     )
     .addBearerAuth(
       {
         in: 'header',
-        name: AUTH_TOKENS.accessToken,
+        name: AuthTokens.accessToken,
         scheme: 'bearer',
         type: 'http',
       },
-      AUTH_TOKENS.accessToken,
+      AuthTokens.accessToken,
     )
     .build();
 

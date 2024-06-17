@@ -5,11 +5,11 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
 import { CreateChatDto } from '@/modules/chats/domain/dtos/create-chat.dto';
 import { CreateMessageDto } from '@/modules/chats/domain/dtos/create-message.dto';
+import { Chat, Message } from '@/modules/chats/domain/entities';
 import {
   CHATS_EVENTS,
   MessageCreatedEvent,
 } from '@/modules/chats/domain/events';
-import { Chat, Message } from '@/modules/chats/domain/models';
 import { IChatsRepository } from '@/modules/chats/domain/repositories/chats.repository';
 import { MediaService } from '@/modules/media/application/services/media.service';
 import { UsersService } from '@/modules/users/application/services/users.service';
@@ -42,8 +42,6 @@ export class ChatsService {
       uow.rollback();
 
       throw error;
-    } finally {
-      uow.end();
     }
   }
 
@@ -254,9 +252,8 @@ export class ChatsService {
       return message;
     } catch (error) {
       await uow.rollback();
+
       throw error;
-    } finally {
-      await uow.end();
     }
   }
 }

@@ -3,14 +3,41 @@ import { LoggerModule } from 'nestjs-pino';
 import { seeder } from 'nestjs-seeder';
 
 import { databaseSettings } from '@/config';
-import { ChatsModule } from '@/modules/chats/chats.module';
-import { ChatsSeeder } from '@/modules/chats/presentation/chats.seeder';
-import { MediaSeeder } from '@/modules/media/infrastructure/media.seeder';
-import { MediaModule } from '@/modules/media/media.module';
-import { PostsSeeder } from '@/modules/posts/infrastructure/posts.seeder';
-import { PostsModule } from '@/modules/posts/posts.module';
-import { UsersSeeder } from '@/modules/users/infrastructure/users.seeder';
-import { UsersModule } from '@/modules/users/users.module';
+import { MongoChatsSeeder } from '@/modules/chats/infrastructure/seeders';
+import { MongoMediaSeeder } from '@/modules/media/infrastructure/seeders';
+import { MongoPostsSeeder } from '@/modules/posts/infrastructure/seeders';
+import { MongoUsersSeeder } from '@/modules/users/infrastructure/seeders';
+
+import {
+  Chat,
+  ChatSchema,
+  Message,
+  MessageSchema,
+  UserChat,
+  UserChatSchema,
+  UserMessage,
+  UserMessageSchema,
+} from './modules/chats/infrastructure/repositories/mongo/entities';
+import {
+  Media,
+  MediaSchema,
+} from './modules/media/infrastructure/repositories/entities';
+import {
+  Post,
+  PostComment,
+  PostCommentSchema,
+  PostSchema,
+  UserPost,
+  UserPostComment,
+  UserPostCommentSchema,
+  UserPostSchema,
+} from './modules/posts/infrastructure/repositories/mongo/entities';
+import {
+  Account,
+  AccountSchema,
+  User,
+  UserSchema,
+} from './modules/users/infrastructure/repositories/mongo/entities';
 
 seeder({
   imports: [
@@ -22,9 +49,51 @@ seeder({
       },
     }),
     MongooseModule.forRoot(databaseSettings.MONGODB_URI),
-    MediaModule,
-    UsersModule,
-    ChatsModule,
-    PostsModule,
+    MongooseModule.forFeature([
+      // Users
+      { name: Account.name, schema: AccountSchema },
+      { name: User.name, schema: UserSchema },
+      // Media
+      { name: Media.name, schema: MediaSchema },
+      // Posts
+      {
+        name: Post.name,
+        schema: PostSchema,
+      },
+      {
+        name: PostComment.name,
+        schema: PostCommentSchema,
+      },
+      {
+        name: UserPost.name,
+        schema: UserPostSchema,
+      },
+      {
+        name: UserPostComment.name,
+        schema: UserPostCommentSchema,
+      },
+      // Chats
+      {
+        name: Chat.name,
+        schema: ChatSchema,
+      },
+      {
+        name: Message.name,
+        schema: MessageSchema,
+      },
+      {
+        name: UserMessage.name,
+        schema: UserMessageSchema,
+      },
+      {
+        name: UserChat.name,
+        schema: UserChatSchema,
+      },
+    ]),
   ],
-}).run([MediaSeeder, UsersSeeder, ChatsSeeder, PostsSeeder]);
+}).run([
+  MongoUsersSeeder,
+  MongoPostsSeeder,
+  MongoMediaSeeder,
+  MongoChatsSeeder,
+]);

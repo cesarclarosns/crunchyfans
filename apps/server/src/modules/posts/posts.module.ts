@@ -14,9 +14,9 @@ import {
   UserPost,
   UserPostComment,
   UserPostCommentSchema,
+  UserPosts,
   UserPostSchema,
-  UserPostsData,
-  UserPostsDataSchema,
+  UserPostsSchema,
 } from '@/modules/posts/infrastructure/repositories/mongo/entities';
 import { MongoPostsRepository } from '@/modules/posts/infrastructure/repositories/mongo/mongo-posts.repository';
 import { PostsController } from '@/modules/posts/presentation/controllers/posts.controller';
@@ -37,8 +37,8 @@ import { PostsController } from '@/modules/posts/presentation/controllers/posts.
         schema: UserPostCommentSchema,
       },
       {
-        name: UserPostsData.name,
-        schema: UserPostsDataSchema,
+        name: UserPosts.name,
+        schema: UserPostsSchema,
       },
     ]),
     MediaModule,

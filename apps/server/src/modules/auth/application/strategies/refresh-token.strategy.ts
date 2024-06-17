@@ -4,14 +4,14 @@ import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { authSettings } from '@/config';
-import { AUTH_COOKIES } from '@/modules/auth/domain/constants/auth-cookies';
-import { AUTH_STRATEGIES } from '@/modules/auth/domain/constants/auth-strategies';
+import { AuthCookies } from '@/modules/auth/domain/enums/auth-cookies';
+import { AuthStrategies } from '@/modules/auth/domain/enums/auth-strategies';
 import { TokenPayload } from '@/modules/auth/domain/types/token-payload';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
-  AUTH_STRATEGIES.refreshToken,
+  AuthStrategies.refreshToken,
 ) {
   constructor() {
     super({
@@ -27,10 +27,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
   private static extractJWT(req: Request): string | null {
     if (
       req.cookies &&
-      AUTH_COOKIES.refreshToken in req.cookies &&
+      AuthCookies.refreshToken in req.cookies &&
       req.cookies.refreshToken.length > 0
     ) {
-      return req.cookies[AUTH_COOKIES.refreshToken];
+      return req.cookies[AuthCookies.refreshToken];
     }
 
     return null;

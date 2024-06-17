@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   OnGatewayConnection,
@@ -6,12 +7,8 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
-import {
-  CHATS_EVENTS,
-  MessageCreatedEvent,
-} from '@/modules/chats/application/events';
-import { MessageReadEvent } from '@/modules/chats/application/events/message-read.event';
 import { ChatsService } from '@/modules/chats/application/services/chats.service';
 
 import {
@@ -22,12 +19,16 @@ import {
   EventPayload,
 } from '../../domain/types/socket';
 
+@Injectable()
 @WebSocketGateway()
 export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: CustomServer;
 
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(
+    @InjectPinoLogger(ChatsGateway.name) private readonly _logger: PinoLogger,
+    private readonly _chatsService: ChatsService,
+  ) {}
 
   handleConnection(socket: CustomSocket) {}
 

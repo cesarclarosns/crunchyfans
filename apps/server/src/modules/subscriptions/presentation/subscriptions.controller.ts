@@ -4,11 +4,11 @@ import { Request } from 'express';
 import { Model } from 'mongoose';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
+import { SubscriptionsService } from '../application/services/subscriptions.service';
 import { CreateSubscriptionDto } from '../domain/dtos/create-subscription.dto';
 import { UpdateSubscriptionPlanDto } from '../domain/dtos/update-subscription-plan.dto';
-import { Subscription } from '../domain/entities/subscription.entity';
-import { SubscriptionPlan } from '../domain/entities/subscription-plan.entity';
-import { SubscriptionsService } from '../application/services/subscriptions.service';
+import { Subscription } from '../infrastructure/repositories/mongo/entities/subscription.entity';
+import { SubscriptionPlan } from '../infrastructure/repositories/mongo/entities/subscription-plan.entity';
 
 @Controller('subscriptions')
 export class SubscriptionsController {

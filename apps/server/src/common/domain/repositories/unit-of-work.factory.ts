@@ -1,14 +1,13 @@
 export interface IUnitOfWork {
-  _dbContext: unknown;
+  start(): Promise<void>;
 
-  start: () => Promise<void>;
-  commit: () => Promise<void>;
-  rollback: () => Promise<void>;
-  end: () => Promise<void>;
+  commit(): Promise<void>;
+
+  rollback(): Promise<void>;
 }
 
 export interface IUnitOfWorkFactory {
-  create: () => IUnitOfWork;
+  create(): IUnitOfWork;
 }
 
 export const IUnitOfWorkFactory = Symbol('IUnitOfWorkFactory');

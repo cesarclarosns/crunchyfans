@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { appSettings } from '@/config';
-import { AUTH_STRATEGIES } from '@/modules/auth/domain/constants/auth-strategies';
+import { AuthStrategies } from '@/modules/auth/domain/enums/auth-strategies';
 
 @Injectable()
-export class GoogleGuard extends AuthGuard(AUTH_STRATEGIES.google) {
+export class GoogleGuard extends AuthGuard(AuthStrategies.google) {
   constructor() {
     super({
       accessType: 'offline',

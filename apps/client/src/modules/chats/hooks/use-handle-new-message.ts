@@ -7,7 +7,7 @@ import {
   type ServerToClientEvents,
 } from '@/modules/socket/types/socket';
 
-import { useGetCurrentUserQuery } from '../../users/hooks/use-get-current-user-data';
+import { useGetCurrentUserQuery } from '../../users/hooks/use-get-current-user';
 import { chatsKeys } from './chats-keys';
 import { type InfiniteDataChats } from './use-get-chats';
 import { type InfiniteDataMessages } from './use-get-messages';

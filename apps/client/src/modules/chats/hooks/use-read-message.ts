@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@/common/libs/apis';
 
-import { useGetCurrentUserQuery } from '../../users/hooks/use-get-current-user-data';
+import { useGetCurrentUserQuery } from '../../users/hooks/use-get-current-user';
 import { chatsKeys } from './chats-keys';
 import { type InfiniteDataChats } from './use-get-chats';
 

@@ -2,11 +2,11 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 
-import { AUTH_STRATEGIES } from '../../domain/constants/auth-strategies';
+import { AuthStrategies } from '../../domain/enums/auth-strategies';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
-export class AccessTokenGuard extends AuthGuard(AUTH_STRATEGIES.accessToken) {
+export class AccessTokenGuard extends AuthGuard(AuthStrategies.accessToken) {
   constructor(private reflector: Reflector) {
     super();
   }

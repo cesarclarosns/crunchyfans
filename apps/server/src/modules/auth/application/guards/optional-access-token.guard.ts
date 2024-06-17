@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { AUTH_STRATEGIES } from '../../domain/constants/auth-strategies';
+import { AuthStrategies } from '../../domain/enums/auth-strategies';
 
 @Injectable()
 export class OptionalAccessTokenGuard extends AuthGuard(
-  AUTH_STRATEGIES.accessToken,
+  AuthStrategies.accessToken,
 ) {
   handleRequest(err: any, user: any) {
     return user;
