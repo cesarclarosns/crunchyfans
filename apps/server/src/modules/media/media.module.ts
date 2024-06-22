@@ -3,16 +3,17 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
 import { MongoUnitOfWorkFactory } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
-
-import { MediaService } from './application/services/media.service';
-import { StorageService } from './application/services/storage.service';
-import { IMediaRepository } from './domain/repositories/media.repository';
 import {
-  Media,
-  MediaSchema,
-} from './infrastructure/repositories/entities/media.entity';
-import { MongoMediaRepository } from './infrastructure/repositories/media.repository';
-import { MediaController } from './presentation/controllers/media.controller';
+  MediaService,
+  StorageService,
+} from '@/modules/media/application/services';
+import { IMediaRepository } from '@/modules/media/domain/repositories/media.repository';
+import {
+  MongoMedia,
+  MongoMediaSchema,
+} from '@/modules/media/infrastructure/entities';
+import { MongoMediaRepository } from '@/modules/media/infrastructure/repositories/mongo-media.repository';
+import { MediaController } from '@/modules/media/presentation/controllers/media.controller';
 
 @Module({
   controllers: [MediaController],
@@ -26,8 +27,8 @@ import { MediaController } from './presentation/controllers/media.controller';
   imports: [
     MongooseModule.forFeature([
       {
-        name: Media.name,
-        schema: MediaSchema,
+        name: MongoMedia.name,
+        schema: MongoMediaSchema,
       },
     ]),
   ],

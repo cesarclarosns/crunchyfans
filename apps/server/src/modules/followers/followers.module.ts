@@ -3,9 +3,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { FollowersService } from '@/modules/followers/application/services/followers.service';
 import {
-  Follower,
-  FollowerSchema,
-} from '@/modules/followers/infrastructure/repositories/entities/follower.entity';
+  MongoFollower,
+  MongoFollowerSchema,
+} from '@/modules/followers/infrastructure/entities/';
 import { FollowersController } from '@/modules/followers/presentation/controllers/followers.controller';
 
 @Module({
@@ -13,7 +13,7 @@ import { FollowersController } from '@/modules/followers/presentation/controller
   exports: [FollowersService],
   imports: [
     MongooseModule.forFeature([
-      { name: Follower.name, schema: FollowerSchema },
+      { name: MongoFollower.name, schema: MongoFollowerSchema },
     ]),
   ],
   providers: [FollowersService],

@@ -7,18 +7,18 @@ import { MediaModule } from '@/modules/media/media.module';
 import { PostsService } from '@/modules/posts/application/services/posts.service';
 import { IPostsRepository } from '@/modules/posts/domain/repositories/posts.repository';
 import {
-  Post,
-  PostComment,
-  PostCommentSchema,
-  PostSchema,
-  UserPost,
-  UserPostComment,
-  UserPostCommentSchema,
-  UserPosts,
-  UserPostSchema,
-  UserPostsSchema,
-} from '@/modules/posts/infrastructure/repositories/mongo/entities';
-import { MongoPostsRepository } from '@/modules/posts/infrastructure/repositories/mongo/mongo-posts.repository';
+  MongoPost,
+  MongoPostComment,
+  MongoPostCommentSchema,
+  MongoPostSchema,
+  MongoUserPost,
+  MongoUserPostComment,
+  MongoUserPostCommentSchema,
+  MongoUserPosts,
+  MongoUserPostSchema,
+  MongoUserPostsSchema,
+} from '@/modules/posts/infrastructure/entities';
+import { MongoPostsRepository } from '@/modules/posts/infrastructure/repositories';
 import { PostsController } from '@/modules/posts/presentation/controllers/posts.controller';
 
 @Module({
@@ -26,19 +26,19 @@ import { PostsController } from '@/modules/posts/presentation/controllers/posts.
   exports: [PostsService, IPostsRepository],
   imports: [
     MongooseModule.forFeature([
-      { name: Post.name, schema: PostSchema },
-      { name: PostComment.name, schema: PostCommentSchema },
+      { name: MongoPost.name, schema: MongoPostSchema },
+      { name: MongoPostComment.name, schema: MongoPostCommentSchema },
       {
-        name: UserPost.name,
-        schema: UserPostSchema,
+        name: MongoUserPost.name,
+        schema: MongoUserPostSchema,
       },
       {
-        name: UserPostComment.name,
-        schema: UserPostCommentSchema,
+        name: MongoUserPostComment.name,
+        schema: MongoUserPostCommentSchema,
       },
       {
-        name: UserPosts.name,
-        schema: UserPostsSchema,
+        name: MongoUserPosts.name,
+        schema: MongoUserPostsSchema,
       },
     ]),
     MediaModule,

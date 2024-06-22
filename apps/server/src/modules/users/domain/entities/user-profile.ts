@@ -1,16 +1,15 @@
 import { UserFollowers } from '@/modules/followers/domain/entities/user-followers';
-import { Media } from '@/modules/media/domain/entities/media';
 import { UserPosts } from '@/modules/posts/domain/entities';
-import { UserSubscriptionsData } from '@/modules/subscriptions/infrastructure/repositories/mongo/entities/user-subscriptions-data.entity';
 
 export class UserProfileBasic {
   id: string;
   username: string;
   name: string;
-  pictures: { cover: Media; profile: Media };
+  profilePicture: string;
+  coverPicture: string;
 
-  constructor(model: UserProfileBasic) {
-    Object.assign(model);
+  constructor(entity: UserProfileBasic) {
+    Object.assign(entity);
   }
 }
 
@@ -19,12 +18,11 @@ export class UserProfile extends UserProfileBasic {
   lastSeen: string;
   userPosts: UserPosts;
   userFollowers: UserFollowers;
-  subscriptionsData: UserSubscriptionsData;
 
-  constructor(model: UserProfile) {
-    super(model);
+  constructor(entity: UserProfile) {
+    super(entity);
 
-    Object.assign(model);
+    Object.assign(entity);
   }
 }
 
@@ -32,9 +30,9 @@ export class UserProfileWithViewerData extends UserProfile {
   subscription: unknown;
   following: unknown;
 
-  constructor(model: UserProfileWithViewerData) {
-    super(model);
+  constructor(entity: UserProfileWithViewerData) {
+    super(entity);
 
-    Object.assign(this, model);
+    Object.assign(this, entity);
   }
 }

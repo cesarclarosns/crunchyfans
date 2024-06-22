@@ -4,26 +4,26 @@ import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
 import {
-  Chat,
-  Message,
-} from '@/modules/chats/infrastructure/repositories/mongo/entities';
-import { User } from '@/modules/users/infrastructure/repositories/mongo/entities';
+  MongoChat,
+  MongoMessage,
+} from '@/modules/chats/infrastructure/entities';
+import { MongoUser } from '@/modules/users/infrastructure/entities';
 
 @Injectable()
 export class MongoChatsSeeder implements Seeder {
   constructor(
-    @InjectModel(User.name) private readonly _userEntity: Model<User>,
-    @InjectModel(Chat.name) private readonly _chatEntity: Model<Chat>,
-    @InjectModel(Message.name)
-    private readonly _messageEntity: Model<Message>,
+    @InjectModel(MongoUser.name) private readonly _userModel: Model<MongoUser>,
+    @InjectModel(MongoChat.name) private readonly _chatModel: Model<MongoChat>,
+    @InjectModel(MongoMessage.name)
+    private readonly _messageModel: Model<MongoMessage>,
   ) {}
 
   async seed(): Promise<any> {}
 
   async drop(): Promise<any> {
     await Promise.all([
-      this._chatEntity.deleteMany({}),
-      this._messageEntity.deleteMany({}),
+      this._chatModel.deleteMany({}),
+      this._messageModel.deleteMany({}),
     ]);
   }
 }

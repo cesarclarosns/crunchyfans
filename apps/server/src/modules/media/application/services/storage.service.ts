@@ -82,12 +82,8 @@ export class StorageService {
       },
     });
 
-    upload.on('httpUploadProgress', (progress) => {
-      this._logger.info('upload progress', progress);
-    });
+    // upload.on('httpUploadProgress', (progress) => {});
 
     await upload.done();
-
-    this._logger.info('upload done');
   }
 }

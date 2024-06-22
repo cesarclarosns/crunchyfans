@@ -9,18 +9,18 @@ import { NotificationsModule } from '@/modules/notifications/notifications.modul
 import { PostsModule } from '@/modules/posts/posts.module';
 import { SubscriptionsModule } from '@/modules/subscriptions/subscriptions.module';
 import { UsersService } from '@/modules/users/application/services/users.service';
+import { IAccountsRepository } from '@/modules/users/domain/repositories/accounts.repository';
 import { IUsersRepository } from '@/modules/users/domain/repositories/users.repository';
-import {
-  Account,
-  AccountSchema,
-  User,
-  UserSchema,
-} from '@/modules/users/infrastructure/repositories/mongo/entities';
-import { MongoUsersRepository } from '@/modules/users/infrastructure/repositories/mongo/mongo-users.repository';
+import { MongoAccountsRepository } from '@/modules/users/infrastructure/repositories/mongo-accounts.repository';
+import { MongoUsersRepository } from '@/modules/users/infrastructure/repositories/mongo-users.repository';
 import { UsersController } from '@/modules/users/presentation/controllers/users.controller';
 
-import { IAccountsRepository } from './domain/repositories/accounts.repository';
-import { MongoAccountsRepository } from './infrastructure/repositories/mongo';
+import {
+  MongoAccount,
+  MongoAccountSchema,
+  MongoUser,
+  MongoUserSchema,
+} from './infrastructure/entities';
 
 @Module({
   controllers: [UsersController],
@@ -32,8 +32,8 @@ import { MongoAccountsRepository } from './infrastructure/repositories/mongo';
   ],
   imports: [
     MongooseModule.forFeature([
-      { name: Account.name, schema: AccountSchema },
-      { name: User.name, schema: UserSchema },
+      { name: MongoAccount.name, schema: MongoAccountSchema },
+      { name: MongoUser.name, schema: MongoUserSchema },
     ]),
     MediaModule,
     ChatsModule,

@@ -4,10 +4,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from '../users/users.module';
 import { PaymentsService } from './application/services/payments.service';
 import {
-  BillingAccount,
-  BillingAccountSchema,
-} from './infrastructure/repositories/mongo/entities/billing.entity';
-import { Payment, PaymentSchema } from './infrastructure/repositories/mongo/entities/payment.entity';
+  MongoBillingAccount,
+  MongoBillingAccountSchema,
+  MongoPayment,
+  MongoPaymentSchema,
+} from './infrastructure/entities';
 import { PaymentsController } from './presentation/controllers/payments.controller';
 
 @Module({
@@ -15,8 +16,8 @@ import { PaymentsController } from './presentation/controllers/payments.controll
   exports: [PaymentsService],
   imports: [
     MongooseModule.forFeature([
-      { name: BillingAccount.name, schema: BillingAccountSchema },
-      { name: Payment.name, schema: PaymentSchema },
+      { name: MongoBillingAccount.name, schema: MongoBillingAccountSchema },
+      { name: MongoPayment.name, schema: MongoPaymentSchema },
     ]),
     UsersModule,
   ],

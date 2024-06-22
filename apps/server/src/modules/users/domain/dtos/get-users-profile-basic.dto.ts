@@ -1,7 +1,6 @@
 export class GetUsersProfileBasicDto {
   ids?: string[];
-  username?: string;
-  name?: string;
+  query: string;
   skip: number;
   limit: number;
   cursor: string;

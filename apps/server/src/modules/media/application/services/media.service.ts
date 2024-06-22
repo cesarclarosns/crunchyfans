@@ -3,7 +3,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { IUnitOfWorkFactory } from '@/common/domain/repositories/unit-of-work.factory';
-import { MongoUnitOfWork } from '@/common/infrastructure/repositories/mongo-unit-of-work.factory';
 import { mediaSettings } from '@/config';
 import { StorageService } from '@/modules/media/application/services/storage.service';
 import { CreateMediaDto } from '@/modules/media/domain/dtos/create-media.dto';

@@ -55,7 +55,8 @@ export class AuthService implements IAuthService {
 
   async signIn(dto: SignInDto): Promise<Tokens> {
     const user = await this._usersService.getUserByEmail(dto.email);
-    this._logger.debug({ user });
+    this._logger.debug({ user }, 'signiIn');
+
     if (!user) {
       throw new BadRequestException('Email is not registered');
     }
@@ -82,11 +83,15 @@ export class AuthService implements IAuthService {
     ]);
 
     if (userByEmail || userByUsername) {
-      throw new BadRequestException('Email or username is already taken.');
+      throw new BadRequestException('Email or username is already taken');
     }
 
+    const hashedPassword = await this._passwordService.createPasswordHash(
+      dto.password,
+    );
+
     const newUser = await this._usersService.createUser(
-      new CreateUserDto({ ...dto }),
+      new CreateUserDto({ ...dto, hashedPassword }),
     );
 
     return newUser;

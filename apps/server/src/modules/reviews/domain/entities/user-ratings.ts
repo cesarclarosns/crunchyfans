@@ -1,6 +1,5 @@
 export class UserRatings {
   userId: string;
-  reviewsCount: number;
   ratingsCountByRating: {
     1: number;
     2: number;

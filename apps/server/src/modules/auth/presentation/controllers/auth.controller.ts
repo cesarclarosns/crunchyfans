@@ -80,6 +80,9 @@ export class AuthController {
       httpOnly: true,
       path: '/',
     });
+    res.cookie(AuthCookies.isUserAuthenticated, true, {
+      path: '/',
+    });
 
     return tokens;
   }
@@ -122,8 +125,6 @@ export class AuthController {
     res.cookie(AuthCookies.refreshToken, tokens.refreshToken, {
       httpOnly: true,
       path: '/',
-      sameSite: 'none',
-      secure: true,
     });
 
     return tokens;
@@ -174,8 +175,9 @@ export class AuthController {
     res.cookie(AuthCookies.refreshToken, tokens.refreshToken, {
       httpOnly: true,
       path: '/',
-      sameSite: 'lax',
-      secure: true,
+    });
+    res.cookie(AuthCookies.isUserAuthenticated, true, {
+      path: '/',
     });
 
     const url = appSettings.APP_DOMAIN;

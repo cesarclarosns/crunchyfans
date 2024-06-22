@@ -8,16 +8,16 @@ export class Media {
   thubmnail: string;
   preview: string;
   sources: Record<string, string>;
-  processing: {
-    fileKey: string;
-    needsThumbnail: boolean;
-    needsPreview: boolean;
-    needsWatermark: boolean;
-  };
   isReady: boolean;
   hasError: boolean;
+  fileKey: string;
+  needsThumbnail: boolean;
+  needsPreview: boolean;
+  needsWatermark: boolean;
+  createdAt: string;
+  updatedAt: string;
 
-  constructor(model: Media) {
-    Object.assign(model, this);
+  constructor(entity: Media) {
+    Object.assign(entity, this);
   }
 }

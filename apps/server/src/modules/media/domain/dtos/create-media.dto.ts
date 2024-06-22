@@ -1,11 +1,48 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsString, ValidateNested } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 import { IsRecord } from '@/common/application/decorators/is-record.decorator';
 
 import { MediaType } from '../types/media-type';
 
-class ProcessingDto {
+export class CreateMediaDto {
+  @IsOptional()
+  @IsString()
+  userId: string;
+
+  @IsIn(['audio', 'image', 'video'] satisfies MediaType[])
+  type: MediaType;
+
+  @IsOptional()
+  @IsRecord()
+  sources: Record<string, string>;
+
+  @IsOptional()
+  @IsString()
+  source: string;
+
+  @IsOptional()
+  @IsString()
+  preview: string;
+
+  @IsOptional()
+  @IsString()
+  thumbnail: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isReady: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  hasError: boolean;
+
   @IsString()
   fileKey: string;
 
@@ -18,45 +55,7 @@ class ProcessingDto {
   @IsBoolean()
   needsPreview: boolean;
 
-  constructor(partial: Partial<ProcessingDto>) {
-    Object.assign(this, partial);
-  }
-}
-
-export class CreateMediaDto {
-  @IsString()
-  userId: string;
-
-  @IsIn(['audio', 'image', 'video'] satisfies MediaType[])
-  type: MediaType;
-
-  @IsRecord()
-  sources: Record<string, string>;
-
-  @IsString()
-  source: string;
-
-  @IsString()
-  preview: string;
-
-  @IsString()
-  thumbnail: string;
-
-  @Type(() => ProcessingDto)
-  @ValidateNested()
-  processing: ProcessingDto;
-
-  @IsBoolean()
-  isReady: boolean;
-
-  @IsBoolean()
-  hasError: boolean;
-
-  constructor({ processing, ...partial }: Partial<CreateMediaDto>) {
-    Object.assign(this, partial);
-
-    if (processing) {
-      this.processing = new ProcessingDto(processing);
-    }
+  constructor(dto: CreateMediaDto) {
+    Object.assign(this, dto);
   }
 }

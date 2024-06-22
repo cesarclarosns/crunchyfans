@@ -3,19 +3,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DataFactory, Seeder } from 'nestjs-seeder';
 
-import {
-  Post,
-  PostComment,
-} from '@/modules/posts/infrastructure/repositories/mongo/entities';
-import { User } from '@/modules/users/infrastructure/repositories/mongo/entities';
+import { MongoUser } from '@/modules/users/infrastructure/entities';
+
+import { MongoPost, MongoPostComment } from '../entities';
 
 @Injectable()
 export class MongoPostsSeeder implements Seeder {
   constructor(
-    @InjectModel(User.name) private readonly _userModel: Model<User>,
-    @InjectModel(Post.name) private readonly postModel: Model<Post>,
-    @InjectModel(PostComment.name)
-    private readonly postCommentModel: Model<PostComment>,
+    @InjectModel(MongoUser.name) private readonly _userModel: Model<MongoUser>,
+    @InjectModel(MongoPost.name) private readonly _postModel: Model<MongoPost>,
+    @InjectModel(MongoPostComment.name)
+    private readonly _postCommentModel: Model<MongoPostComment>,
   ) {}
 
   async seed() {

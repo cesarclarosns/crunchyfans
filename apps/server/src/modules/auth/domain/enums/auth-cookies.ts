@@ -1,4 +1,4 @@
 export enum AuthCookies {
-  isAuthenticated = 'isAuthenticated',
+  isUserAuthenticated = 'isUserAuthenticated',
   refreshToken = 'refreshToken',
 }

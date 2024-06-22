@@ -1,9 +1,7 @@
-import { UserStatus } from '../types/user-status';
+import { UserStatus } from '@/modules/users/domain/types/user-status';
 
 export class User {
   id: string;
-  createdAt: string;
-  updatedAt: string;
   username: string;
   email: string;
   hashedPassword: string;
@@ -11,11 +9,13 @@ export class User {
   about: string;
   status: UserStatus;
   lastSeen: string;
-  oauth: { googleId: string };
-  pictures: { cover: string; profile: string };
+  profilePicture: string;
+  coverPicture: string;
   isEmailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 
-  constructor(model: User) {
-    Object.assign(this, model);
+  constructor(entity: User) {
+    Object.assign(this, entity);
   }
 }

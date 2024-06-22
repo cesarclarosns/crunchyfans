@@ -7,18 +7,12 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SubscriptionsService } from '../application/services/subscriptions.service';
 import { CreateSubscriptionDto } from '../domain/dtos/create-subscription.dto';
 import { UpdateSubscriptionPlanDto } from '../domain/dtos/update-subscription-plan.dto';
-import { Subscription } from '../infrastructure/repositories/mongo/entities/subscription.entity';
-import { SubscriptionPlan } from '../infrastructure/repositories/mongo/entities/subscription-plan.entity';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
   constructor(
     @InjectPinoLogger(SubscriptionsController.name)
     private readonly logger: PinoLogger,
-    @InjectModel(Subscription.name)
-    private readonly subscriptionModel: Model<Subscription>,
-    @InjectModel(SubscriptionPlan.name)
-    private readonly subscriptionPlanModel: Model<SubscriptionPlan>,
     private readonly subscriptionsService: SubscriptionsService,
   ) {}
 

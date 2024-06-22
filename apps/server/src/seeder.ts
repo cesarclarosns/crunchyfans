@@ -4,40 +4,35 @@ import { seeder } from 'nestjs-seeder';
 
 import { databaseSettings } from '@/config';
 import { MongoChatsSeeder } from '@/modules/chats/infrastructure/seeders';
-import { MongoMediaSeeder } from '@/modules/media/infrastructure/seeders';
 import { MongoPostsSeeder } from '@/modules/posts/infrastructure/seeders';
 import { MongoUsersSeeder } from '@/modules/users/infrastructure/seeders';
 
 import {
-  Chat,
-  ChatSchema,
-  Message,
-  MessageSchema,
-  UserChat,
-  UserChatSchema,
-  UserMessage,
-  UserMessageSchema,
-} from './modules/chats/infrastructure/repositories/mongo/entities';
+  MongoChat,
+  MongoChatSchema,
+  MongoMessage,
+  MongoMessageSchema,
+  MongoUserChat,
+  MongoUserChatSchema,
+  MongoUserMessage,
+  MongoUserMessageSchema,
+} from './modules/chats/infrastructure/entities';
 import {
-  Media,
-  MediaSchema,
-} from './modules/media/infrastructure/repositories/entities';
+  MongoPost,
+  MongoPostComment,
+  MongoPostCommentSchema,
+  MongoPostSchema,
+  MongoUserPost,
+  MongoUserPostComment,
+  MongoUserPostCommentSchema,
+  MongoUserPostSchema,
+} from './modules/posts/infrastructure/entities';
 import {
-  Post,
-  PostComment,
-  PostCommentSchema,
-  PostSchema,
-  UserPost,
-  UserPostComment,
-  UserPostCommentSchema,
-  UserPostSchema,
-} from './modules/posts/infrastructure/repositories/mongo/entities';
-import {
-  Account,
-  AccountSchema,
-  User,
-  UserSchema,
-} from './modules/users/infrastructure/repositories/mongo/entities';
+  MongoAccount,
+  MongoAccountSchema,
+  MongoUser,
+  MongoUserSchema,
+} from './modules/users/infrastructure/entities';
 
 seeder({
   imports: [
@@ -51,49 +46,42 @@ seeder({
     MongooseModule.forRoot(databaseSettings.MONGODB_URI),
     MongooseModule.forFeature([
       // Users
-      { name: Account.name, schema: AccountSchema },
-      { name: User.name, schema: UserSchema },
-      // Media
-      { name: Media.name, schema: MediaSchema },
+      { name: MongoAccount.name, schema: MongoAccountSchema },
+      { name: MongoUser.name, schema: MongoUserSchema },
       // Posts
       {
-        name: Post.name,
-        schema: PostSchema,
+        name: MongoPost.name,
+        schema: MongoPostSchema,
       },
       {
-        name: PostComment.name,
-        schema: PostCommentSchema,
+        name: MongoPostComment.name,
+        schema: MongoPostCommentSchema,
       },
       {
-        name: UserPost.name,
-        schema: UserPostSchema,
+        name: MongoUserPost.name,
+        schema: MongoUserPostSchema,
       },
       {
-        name: UserPostComment.name,
-        schema: UserPostCommentSchema,
+        name: MongoUserPostComment.name,
+        schema: MongoUserPostCommentSchema,
       },
       // Chats
       {
-        name: Chat.name,
-        schema: ChatSchema,
+        name: MongoChat.name,
+        schema: MongoChatSchema,
       },
       {
-        name: Message.name,
-        schema: MessageSchema,
+        name: MongoMessage.name,
+        schema: MongoMessageSchema,
       },
       {
-        name: UserMessage.name,
-        schema: UserMessageSchema,
+        name: MongoUserMessage.name,
+        schema: MongoUserMessageSchema,
       },
       {
-        name: UserChat.name,
-        schema: UserChatSchema,
+        name: MongoUserChat.name,
+        schema: MongoUserChatSchema,
       },
     ]),
   ],
-}).run([
-  MongoUsersSeeder,
-  MongoPostsSeeder,
-  MongoMediaSeeder,
-  MongoChatsSeeder,
-]);
+}).run([MongoUsersSeeder, MongoPostsSeeder, MongoChatsSeeder]);

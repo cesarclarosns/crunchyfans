@@ -1,19 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import argon2 from 'argon2';
 import { Model } from 'mongoose';
-import { DataFactory, Seeder } from 'nestjs-seeder';
+import { Seeder } from 'nestjs-seeder';
 
-import { Media } from '@/modules/media/infrastructure/repositories/entities';
-import { User } from '@/modules/users/infrastructure/repositories/mongo/entities';
+import { MongoUser } from '@/modules/users/infrastructure/entities/mongo-user.entity';
 
 @Injectable()
 export class MongoUsersSeeder implements Seeder {
   constructor(
-    @InjectModel(User.name)
-    private readonly _userEntity: Model<User>,
-    @InjectModel(Media.name)
-    private readonly _mediaEntity: Model<Media>,
+    @InjectModel(MongoUser.name)
+    private readonly _userModel: Model<MongoUser>,
   ) {}
 
   async seed(): Promise<any> {
@@ -30,6 +26,6 @@ export class MongoUsersSeeder implements Seeder {
   }
 
   async drop(): Promise<any> {
-    return await this._userEntity.deleteMany({});
+    return await this._userModel.deleteMany({});
   }
 }
